@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IELTS单词卡片 - 循环学习模式</title>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .unit-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .card-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            padding: 20px;
+        }
+
+        .word-card {
+            width: 100%;
+            max-width: 350px;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .word-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: white;
+        }
+
+        .card-front {
+            z-index: 2;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .word {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .phonetic {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .phonetic:active {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(0.95);
+        }
+
+        .definition {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .part-of-speech {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+
+        .prev-btn::before {
+            content: '←';
+        }
+
+        .next-btn::before {
+            content: '→';
+        }
+
+        .swipe-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .swipe-hint.show {
+            opacity: 1;
+        }
+
+        .unit-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .unit-indicator.show {
+            animation: unitSwitch 0.6s ease;
+        }
+
+        /* 加载中界面 */
+        .loading-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .error-container {
+            display: none;
+        }
+
+        .use-sample-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .use-sample-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes unitSwitch {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @media (max-width: 375px) {
+            .word-card {
+                max-width: 320px;
+                height: 350px;
+            }
+            
+            .word {
+                font-size: 28px;
+            }
+            
+            .definition {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载中界面 -->
+    <div class="loading-container" id="loadingContainer">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载词汇文件...</div>
+        <div class="loading-subtext" id="loadingSubtext">IELTS Word List.txt</div>
+        <div class="error-container" id="errorContainer">
+            <div class="loading-text">加载失败</div>
+            <div class="loading-subtext">请确保文件存在于服务器根目录</div>
+            <button class="use-sample-btn" id="useSampleBtn">使用示例数据</button>
+        </div>
+    </div>
+
+    <!-- 主应用界面 -->
+    <div class="container" id="container">
+        <div class="header">
+            <div class="unit-title" id="unitTitle">未加载单元</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="card-container" id="cardContainer">
+            <div class="word-card" id="wordCard">
+                <div class="card-face card-front">
+                    <div class="word" id="wordText">-</div>
+                    <div class="phonetic" id="phoneticText">-</div>
+                    <div class="hint">点击卡片查看释义</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="part-of-speech" id="partOfSpeech">-</div>
+                    <div class="definition" id="definitionText">-</div>
+                    <div class="hint">点击卡片返回</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn prev-btn" id="prevBtn"></button>
+            <button class="control-btn next-btn" id="nextBtn"></button>
+        </div>
+
+        <div class="swipe-hint" id="swipeHint"></div>
+        <div class="unit-indicator" id="unitIndicator"></div>
+    </div>
+
+    <script>
+        // 词汇数据存储
+        let wordLists = [];
+        
+        // 应用状态
+        let currentUnitIndex = 0;
+        let currentWordIndex = 0;
+        let isFlipped = false;
+
+        // 示例数据（后备）
+        const sampleWordLists = [
+            {
+                id: 'wordlist01',
+                name: 'Word List 01',
+                words: [
+                    { word: 'emperor', phonetic: '/ˈempərə(r)/', partOfSpeech: 'n.', definition: '皇帝；君主' },
+                    { word: 'exact', phonetic: '/ɪgˈzækt/', partOfSpeech: 'a.', definition: '精确的；准确的' },
+                    { word: 'traditional', phonetic: '[trəˈdɪʃənl]', partOfSpeech: 'a.', definition: '传统的，惯例的；口传的，传说的' },
+                    { word: 'lack', phonetic: '/læk/', partOfSpeech: 'n./vt.', definition: '缺乏，不足，没有' },
+                    { word: 'pardon', phonetic: '/ˈpɑːdn/', partOfSpeech: 'excl./n./vt.', definition: '原谅，宽恕；赦免' }
+                ]
+            },
+            {
+                id: 'wordlist02',
+                name: 'Word List 02',
+                words: [
+                    { word: 'regional', phonetic: "['rɪːdʒənl]", partOfSpeech: 'a.', definition: '局部范围的；地方（性）的，区域性的' },
+                    { word: 'secure', phonetic: '/sɪˈkjuə(r)/', partOfSpeech: 'v./a.', definition: '得到某物，获得；防护，保卫  a. 安全的；可靠的，放心的' },
+                    { word: 'preserve', phonetic: '/prɪˈzɜːv/', partOfSpeech: 'vt.', definition: '保护；维持；保存，保藏；腌渍' }
+                ]
+            }
+        ];
+
+        // DOM元素
+        const loadingContainerEl = document.getElementById('loadingContainer');
+        const containerEl = document.getElementById('container');
+        const errorContainerEl = document.getElementById('errorContainer');
+        const useSampleBtnEl = document.getElementById('useSampleBtn');
+        const wordCardEl = document.getElementById('wordCard');
+        const wordTextEl = document.getElementById('wordText');
+        const phoneticTextEl = document.getElementById('phoneticText');
+        const partOfSpeechEl = document.getElementById('partOfSpeech');
+        const definitionTextEl = document.getElementById('definitionText');
+        const unitTitleEl = document.getElementById('unitTitle');
+        const progressFillEl = document.getElementById('progressFill');
+        const prevBtnEl = document.getElementById('prevBtn');
+        const nextBtnEl = document.getElementById('nextBtn');
+        const swipeHintEl = document.getElementById('swipeHint');
+        const unitIndicatorEl = document.getElementById('unitIndicator');
+
+        // 文件解析函数
+        function parseWordData(text) {
+            const lines = text.trim().split('\n');
+            const lists = [];
+            let currentList = null;
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // 检查是否为新单元的开始
+                const unitMatch = line.match(/^Word List\s*0?(\d+)/i);
+                if (unitMatch) {
+                    if (currentList) {
+                        lists.push(currentList);
+                    }
+                    currentList = {
+                        id: `wordlist${unitMatch[1].padStart(2, '0')}`,
+                        name: `Word List ${unitMatch[1].padStart(2, '0')}`,
+                        words: []
+                    };
+                    continue;
+                }
+                
+                // 如果不是在单元内，跳过
+                if (!currentList) continue;
+                
+                // 跳过空行
+                if (!line) continue;
+                
+                // 使用正则表达式匹配单词、音标和释义
+                // 支持多种音标格式：/.../ 或 [...]
+                const match = line.match(/^(.+?)\s+([\/\[][^\]\/]+[\]\/])\s+(.+)$/);
+                if (match) {
+                    let word = match[1].trim();
+                    const phonetic = match[2].trim();
+                    let definition = match[3].trim();
+                    
+                    // 移除单词后的星号
+                    word = word.replace(/\*$/, '');
+                    
+                    // 解析词性和释义
+                    const defMatch = definition.match(/^([a-z]+\.)\s+(.+)$/i);
+                    let partOfSpeech = '';
+                    let defText = definition;
+                    
+                    if (defMatch) {
+                        partOfSpeech = defMatch[1];
+                        defText = defMatch[2];
+                    }
+                    
+                    currentList.words.push({
+                        word,
+                        phonetic,
+                        partOfSpeech,
+                        definition: defText
+                    });
+                }
+            }
+            
+            // 添加最后一个单元
+            if (currentList) {
+                lists.push(currentList);
+            }
+            
+            return lists;
+        }
+
+        // 自动加载词汇文件
+        function loadWordFile() {
+            // 尝试从服务器根目录加载文件
+            fetch('word-list.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File not found');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    wordLists = parseWordData(text);
+                    if (wordLists.length > 0) {
+                        startApp();
+                    } else {
+                        showError();
+                    }
+                })
+                .catch(error => {
+                    console.error('加载失败:', error);
+                    showError();
+                });
+        }
+
+        // 显示错误信息并提供示例数据选项
+        function showError() {
+            document.getElementById('loadingSubtext').style.display = 'none';
+            errorContainerEl.style.display = 'block';
+        }
+
+        // 启动主应用
+        function startApp() {
+            if (wordLists.length === 0) {
+                alert('词汇数据为空！');
+                return;
+            }
+            
+            loadingContainerEl.style.display = 'none';
+            containerEl.style.display = 'flex';
+            
+            currentUnitIndex = 0;
+            currentWordIndex = 0;
+            updateCard();
+            setupGestureControls();
+        }
+
+        // 更新卡片内容
+        function updateCard() {
+            if (wordLists.length === 0) return;
+            
+            const currentList = wordLists[currentUnitIndex];
+            if (!currentList || currentList.words.length === 0) return;
+            
+            const currentWord = currentList.words[currentWordIndex];
+            
+            wordTextEl.textContent = currentWord.word;
+            phoneticTextEl.textContent = currentWord.phonetic;
+            partOfSpeechEl.textContent = currentWord.partOfSpeech;
+            definitionTextEl.textContent = currentWord.definition;
+            
+            unitTitleEl.textContent = currentList.name;
+            
+            const progress = ((currentWordIndex + 1) / currentList.words.length) * 100;
+            progressFillEl.style.width = progress + '%';
+            
+            // 重置卡片翻转状态
+            wordCardEl.classList.remove('flipped');
+            isFlipped = false;
+        }
+
+        // 播放单词发音
+        function playPronunciation() {
+            if (wordLists.length === 0) return;
+            
+            const word = wordLists[currentUnitIndex].words[currentWordIndex].word;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音合成');
+            }
+        }
+
+        // 显示滑动提示
+        function showSwipeHint(message) {
+            swipeHintEl.textContent = message;
+            swipeHintEl.classList.add('show');
+            setTimeout(() => {
+                swipeHintEl.classList.remove('show');
+            }, 1500);
+        }
+
+        // 显示单元切换指示器
+        function showUnitIndicator() {
+            unitIndicatorEl.textContent = `Unit ${currentUnitIndex + 1}`;
+            unitIndicatorEl.classList.add('show');
+            setTimeout(() => {
+                unitIndicatorEl.classList.remove('show');
+            }, 600);
+        }
+
+        // 切换到下一个单词（支持循环）
+        function nextWord() {
+            if (wordLists.length === 0) return;
+            
+            const currentList = wordLists[currentUnitIndex];
+            currentWordIndex = (currentWordIndex + 1) % currentList.words.length;
+            updateCard();
+            
+            if (currentWordIndex === 0) {
+                //showSwipeHint('循环到第一个单词');
+            } else {
+                //showSwipeHint('下一个单词');
+            }
+        }
+
+        // 切换到上一个单词（支持循环）
+        function prevWord() {
+            if (wordLists.length === 0) return;
+            
+            const currentList = wordLists[currentUnitIndex];
+            currentWordIndex = (currentWordIndex - 1 + currentList.words.length) % currentList.words.length;
+            updateCard();
+            
+            if (currentWordIndex === currentList.words.length - 1) {
+                //showSwipeHint('循环到最后一个单词');
+            } else {
+                //showSwipeHint('上一个单词');
+            }
+        }
+
+        // 切换到下一个单元
+        function nextUnit() {
+            if (wordLists.length === 0) return;
+            
+            if (wordLists.length > 1) {
+                currentUnitIndex = (currentUnitIndex + 1) % wordLists.length;
+                currentWordIndex = 0;
+                updateCard();
+                showUnitIndicator();
+                showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
+            } else {
+                showSwipeHint('只有一个单元');
+            }
+        }
+
+        // 切换到上一个单元
+        function prevUnit() {
+            if (wordLists.length === 0) return;
+            
+            if (wordLists.length > 1) {
+                currentUnitIndex = (currentUnitIndex - 1 + wordLists.length) % wordLists.length;
+                currentWordIndex = 0;
+                updateCard();
+                showUnitIndicator();
+                showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
+            } else {
+                showSwipeHint('只有一个单元');
+            }
+        }
+
+        // 设置手势控制
+        function setupGestureControls() {
+            const hammer = new Hammer(wordCardEl);
+            
+            // 启用所有方向的手势
+            hammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+            hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+            
+            // 点击卡片翻转
+            hammer.on('tap', (e) => {
+                e.preventDefault();
+                wordCardEl.classList.toggle('flipped');
+                isFlipped = !isFlipped;
+            });
+            
+            // 左右滑动切换单词（循环）
+            hammer.on('swipeleft', (e) => {
+                e.preventDefault();
+                if (!isFlipped) {
+                    nextWord();
+                }
+            });
+            
+            hammer.on('swiperight', (e) => {
+                e.preventDefault();
+                if (!isFlipped) {
+                    prevWord();
+                }
+            });
+            
+            // 上下滑动切换单元
+            hammer.on('swipeup', (e) => {
+                e.preventDefault();
+                nextUnit();
+            });
+            
+            hammer.on('swipedown', (e) => {
+                e.preventDefault();
+                prevUnit();
+            });
+            
+            // 音标点击发音
+            phoneticTextEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                playPronunciation();
+            });
+            
+            // 控制按钮
+            prevBtnEl.addEventListener('click', () => prevWord());
+            nextBtnEl.addEventListener('click', () => nextWord());
+            
+            // 键盘控制（桌面端）
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') prevWord();
+                if (e.key === 'ArrowRight') nextWord();
+                if (e.key === 'ArrowUp') prevUnit();
+                if (e.key === 'ArrowDown') nextUnit();
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    wordCardEl.classList.toggle('flipped');
+                    isFlipped = !isFlipped;
+                }
+                if (e.key === 'p') playPronunciation();
+            });
+        }
+
+        // 使用示例数据
+        useSampleBtnEl.addEventListener('click', () => {
+            wordLists = sampleWordLists;
+            startApp();
+        });
+
+        // 应用启动时自动加载文件
+        window.addEventListener('DOMContentLoaded', loadWordFile);
+
+        // 防止页面滚动
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
