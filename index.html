@@ -3,81 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IELTS单词卡片 - 循环学习模式</title>
+    <title>IELTS单词卡片</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,0&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
     <style>
-        * {
+        /* ========================================
+           Material Design 3 — Design Tokens
+           ======================================== */
+
+        :root {
+            /* Color — Light scheme (seed: #6750A4) */
+            --md-primary: #6750A4;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #EADDFF;
+            --md-on-primary-container: #21005D;
+
+            --md-secondary: #625B71;
+            --md-on-secondary: #FFFFFF;
+            --md-secondary-container: #E8DEF8;
+            --md-on-secondary-container: #1D192B;
+
+            --md-tertiary: #7D5260;
+            --md-on-tertiary: #FFFFFF;
+            --md-tertiary-container: #FFD8E4;
+            --md-on-tertiary-container: #31111D;
+
+            --md-error: #B3261E;
+            --md-on-error: #FFFFFF;
+            --md-error-container: #F9DEDC;
+            --md-on-error-container: #410E0B;
+
+            --md-background: #FFFBFE;
+            --md-on-background: #1C1B1F;
+            --md-surface: #FFFBFE;
+            --md-on-surface: #1C1B1F;
+            --md-surface-variant: #E7E0EC;
+            --md-on-surface-variant: #49454F;
+
+            --md-outline: #79747E;
+            --md-outline-variant: #CAC4D0;
+            --md-shadow: #000000;
+
+            /* Shape */
+            --md-shape-xs: 4px;
+            --md-shape-sm: 8px;
+            --md-shape-md: 12px;
+            --md-shape-lg: 16px;
+            --md-shape-xl: 28px;
+            --md-shape-full: 9999px;
+
+            /* Elevation */
+            --md-elevation-0: none;
+            --md-elevation-1: 0px 1px 3px 1px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.30);
+            --md-elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.30);
+            --md-elevation-3: 0px 4px 8px 3px rgba(0,0,0,0.15), 0px 1px 3px 0px rgba(0,0,0,0.30);
+
+            /* Motion */
+            --md-motion-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);
+            --md-motion-emphasized-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+            --md-motion-emphasized-accel: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+        }
+
+        /* ========================================
+           Reset & Base
+           ======================================== */
+
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--md-background);
+            color: var(--md-on-background);
             height: 100vh;
             overflow: hidden;
-            position: relative;
             user-select: none;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            width: 100%;
-            height: 100vh;
+        .app {
             display: none;
             flex-direction: column;
-            position: relative;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .unit-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .progress-bar {
+            height: 100vh;
             width: 100%;
-            height: 3px;
-            background: #e0e0e0;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transition: width 0.3s ease;
-            border-radius: 2px;
-        }
+        /* ========================================
+           Material 3 — Top App Bar (Small)
+           ======================================== */
 
-        .card-container {
-            flex: 1;
+        .top-app-bar {
+            display: flex;
+            flex-direction: column;
+            background: var(--md-surface);
+            box-shadow: var(--md-elevation-1);
+            z-index: 10;
             position: relative;
+        }
+
+        .top-app-bar__row {
+            display: flex;
+            align-items: center;
+            height: 64px;
+            padding: 0 24px;
+        }
+
+        .top-app-bar__title {
+            font-size: 22px;
+            font-weight: 500;
+            line-height: 28px;
+            letter-spacing: 0;
+            color: var(--md-on-surface);
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .top-app-bar__action {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: var(--md-shape-full);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--md-on-surface-variant);
+            overflow: hidden;
+            transition: background 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .top-app-bar__action:hover {
+            background: rgba(73, 69, 79, 0.08);
+        }
+
+        .top-app-bar__action:active {
+            background: rgba(73, 69, 79, 0.12);
+        }
+
+        .top-app-bar__action .material-symbols-outlined {
+            font-size: 24px;
+        }
+
+        /* ========================================
+           Material 3 — Linear Progress Indicator
+           ======================================== */
+
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: var(--md-surface-variant);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--md-primary);
+            transition: width 0.3s var(--md-motion-emphasized);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* ========================================
+           Card Container & Material 3 Elevated Card
+           ======================================== */
+
+        .card-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 24px;
             perspective: 1000px;
-            padding: 20px;
+            position: relative;
         }
 
         .word-card {
             width: 100%;
-            max-width: 350px;
-            height: 400px;
+            max-width: 360px;
+            height: 420px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.6s var(--md-motion-emphasized);
             cursor: pointer;
         }
 
@@ -87,216 +205,260 @@
 
         .card-face {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             backface-visibility: hidden;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            -webkit-backface-visibility: hidden;
+            border-radius: var(--md-shape-lg);
+            background: var(--md-surface);
+            box-shadow: var(--md-elevation-1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px;
-            background: white;
-        }
-
-        .card-front {
-            z-index: 2;
+            padding: 32px 28px;
         }
 
         .card-back {
             transform: rotateY(180deg);
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--md-surface);
         }
 
-        .word {
-            font-size: 32px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 15px;
+        .card-face .word {
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 36px;
+            letter-spacing: 0;
+            color: var(--md-on-surface);
             text-align: center;
-        }
-
-        .phonetic {
-            font-size: 18px;
-            color: #667eea;
             margin-bottom: 20px;
-            font-family: 'Georgia', serif;
-            cursor: pointer;
-            padding: 8px 16px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 20px;
-            transition: all 0.3s ease;
         }
 
-        .phonetic:active {
-            background: rgba(102, 126, 234, 0.2);
-            transform: scale(0.95);
-        }
-
-        .definition {
-            font-size: 20px;
-            color: #333;
-            text-align: center;
-            line-height: 1.6;
-        }
-
-        .part-of-speech {
+        .card-face .phonetic {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
             font-weight: 500;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+            color: var(--md-on-surface-variant);
+            background: var(--md-surface-variant);
+            padding: 6px 14px 6px 16px;
+            border-radius: var(--md-shape-full);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: 'Times New Roman', Georgia, serif;
         }
 
-        .hint {
+        .card-face .phonetic:hover {
+            background: var(--md-outline-variant);
+        }
+
+        .card-face .phonetic:active {
+            background: var(--md-outline);
+            color: var(--md-surface);
+        }
+
+        .card-face .phonetic .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        .card-face .part-of-speech {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+            color: var(--md-primary);
+            background: var(--md-primary-container);
+            padding: 2px 14px;
+            border-radius: var(--md-shape-full);
+            margin-bottom: 16px;
+        }
+
+        .card-face .definition {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 28px;
+            letter-spacing: 0;
+            color: var(--md-on-surface);
+            text-align: center;
+            max-width: 100%;
+        }
+
+        .card-face .hint {
             position: absolute;
             bottom: 20px;
             font-size: 12px;
-            color: #999;
+            font-weight: 400;
+            line-height: 16px;
+            letter-spacing: 0.5px;
+            color: var(--md-on-surface-variant);
+            opacity: 0.6;
         }
+
+        /* ========================================
+           Material 3 — Icon Buttons (Navigation)
+           ======================================== */
 
         .controls {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 10;
-        }
-
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            gap: 32px;
+            padding: 16px 24px 28px;
+            z-index: 10;
+        }
+
+        .icon-btn {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            border: none;
+            background: transparent;
+            border-radius: var(--md-shape-full);
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--md-on-surface-variant);
+            overflow: hidden;
+            transition: background 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .control-btn:active {
-            transform: scale(0.9);
+        .icon-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.15s ease;
         }
 
-        .prev-btn::before {
-            content: '←';
+        .icon-btn:hover::before {
+            opacity: 0.08;
         }
 
-        .next-btn::before {
-            content: '→';
+        .icon-btn:active::before {
+            opacity: 0.12;
         }
+
+        .icon-btn .material-symbols-outlined {
+            font-size: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========================================
+           Material 3 — Filled Button
+           ======================================== */
+
+        .filled-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--md-shape-full);
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: box-shadow 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .filled-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--md-on-primary);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .filled-btn:hover::before {
+            opacity: 0.08;
+        }
+
+        .filled-btn:active::before {
+            opacity: 0.12;
+        }
+
+        .filled-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* ========================================
+           Swipe Hint (Snackbar-like)
+           ======================================== */
 
         .swipe-hint {
             position: absolute;
-            top: 50%;
+            bottom: 100px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--md-surface);
+            color: var(--md-on-surface);
+            padding: 10px 24px;
+            border-radius: var(--md-shape-sm);
             font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            letter-spacing: 0.25px;
+            box-shadow: var(--md-elevation-2);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s ease, transform 0.2s var(--md-motion-emphasized-decel);
             pointer-events: none;
             z-index: 20;
+            white-space: nowrap;
         }
 
         .swipe-hint.show {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
+
+        /* ========================================
+           Unit Indicator
+           ======================================== */
 
         .unit-indicator {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-size: 36px;
+            font-weight: 600;
+            line-height: 44px;
+            letter-spacing: 0;
+            color: var(--md-primary);
             opacity: 0;
             pointer-events: none;
             z-index: 15;
+            text-shadow: none;
         }
 
         .unit-indicator.show {
-            animation: unitSwitch 0.6s ease;
+            animation: unitPop 0.6s var(--md-motion-emphasized) forwards;
         }
 
-        /* 加载中界面 */
-        .loading-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 18px;
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-
-        .loading-subtext {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .error-container {
-            display: none;
-        }
-
-        .use-sample-btn {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .use-sample-btn:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        @keyframes unitSwitch {
+        @keyframes unitPop {
             0% {
                 opacity: 0;
                 transform: translate(-50%, -50%) scale(0.8);
             }
-            50% {
+            40% {
                 opacity: 1;
-                transform: translate(-50%, -50%) scale(1.1);
+                transform: translate(-50%, -50%) scale(1.05);
             }
             100% {
                 opacity: 0;
@@ -304,62 +466,181 @@
             }
         }
 
-        @media (max-width: 375px) {
+        /* ========================================
+           Loading Screen
+           ======================================== */
+
+        .loading {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            background: var(--md-background);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--md-outline-variant);
+            border-top-color: var(--md-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+            letter-spacing: 0.15px;
+            color: var(--md-on-surface);
+            margin-bottom: 4px;
+        }
+
+        .loading-sub {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            letter-spacing: 0.25px;
+            color: var(--md-on-surface-variant);
+        }
+
+        .loading-error {
+            display: none;
+            margin-top: 32px;
+        }
+
+        .loading-error .material-symbols-outlined {
+            font-size: 48px;
+            color: var(--md-error);
+            margin-bottom: 16px;
+        }
+
+        .loading-error .filled-btn {
+            margin-top: 24px;
+        }
+
+        /* ========================================
+           Responsive
+           ======================================== */
+
+        @media (max-width: 420px) {
             .word-card {
-                max-width: 320px;
-                height: 350px;
+                max-width: 100%;
+                height: 380px;
             }
-            
-            .word {
-                font-size: 28px;
+
+            .card-face {
+                padding: 24px 20px;
             }
-            
-            .definition {
-                font-size: 18px;
+
+            .card-face .word {
+                font-size: 24px;
+                line-height: 32px;
+            }
+
+            .card-face .definition {
+                font-size: 16px;
+                line-height: 24px;
+            }
+
+            .top-app-bar__row {
+                padding: 0 16px;
+            }
+
+            .controls {
+                gap: 24px;
+                padding: 12px 16px 20px;
+            }
+
+            .icon-btn {
+                width: 48px;
+                height: 48px;
+            }
+
+            .icon-btn .material-symbols-outlined {
+                font-size: 24px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .word-card {
+                max-width: 400px;
+                height: 460px;
+            }
+
+            .card-face .word {
+                font-size: 32px;
+                line-height: 40px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- 加载中界面 -->
-    <div class="loading-container" id="loadingContainer">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">正在加载词汇文件...</div>
-        <div class="loading-subtext" id="loadingSubtext">IELTS Word List.txt</div>
-        <div class="error-container" id="errorContainer">
-            <div class="loading-text">加载失败</div>
-            <div class="loading-subtext">请确保文件存在于服务器根目录</div>
-            <button class="use-sample-btn" id="useSampleBtn">使用示例数据</button>
+
+    <!-- ======== Loading Screen ======== -->
+    <div class="loading" id="loadingContainer">
+        <div class="spinner"></div>
+        <p class="loading-title">正在加载词汇文件</p>
+        <p class="loading-sub" id="loadingSubtext">IELTS Word List.txt</p>
+        <div class="loading-error" id="errorContainer">
+            <span class="material-symbols-outlined">error_outline</span>
+            <p class="loading-title">加载失败</p>
+            <p class="loading-sub">请确保文件存在于服务器根目录</p>
+            <button class="filled-btn" id="useSampleBtn">
+                <span class="material-symbols-outlined">auto_stories</span>
+                使用示例数据
+            </button>
         </div>
     </div>
 
-    <!-- 主应用界面 -->
-    <div class="container" id="container">
-        <div class="header">
-            <div class="unit-title" id="unitTitle">未加载单元</div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    <!-- ======== Main App ======== -->
+    <div class="app" id="container">
+        <header class="top-app-bar">
+            <div class="top-app-bar__row">
+                <h1 class="top-app-bar__title" id="unitTitle">未加载单元</h1>
+                <button class="top-app-bar__action" id="playBtn" aria-label="播放发音">
+                    <span class="material-symbols-outlined">volume_up</span>
+                </button>
             </div>
-        </div>
+            <div class="progress-track">
+                <div class="progress-bar" id="progressFill" style="width: 0%"></div>
+            </div>
+        </header>
 
         <div class="card-container" id="cardContainer">
             <div class="word-card" id="wordCard">
                 <div class="card-face card-front">
-                    <div class="word" id="wordText">-</div>
-                    <div class="phonetic" id="phoneticText">-</div>
-                    <div class="hint">点击卡片查看释义</div>
+                    <p class="word" id="wordText">-</p>
+                    <span class="phonetic" id="phoneticText">
+                        <span class="material-symbols-outlined">volume_up</span>
+                        -
+                    </span>
+                    <span class="hint">点击卡片查看释义</span>
                 </div>
                 <div class="card-face card-back">
-                    <div class="part-of-speech" id="partOfSpeech">-</div>
-                    <div class="definition" id="definitionText">-</div>
-                    <div class="hint">点击卡片返回</div>
+                    <span class="part-of-speech" id="partOfSpeech">-</span>
+                    <p class="definition" id="definitionText">-</p>
+                    <span class="hint">点击卡片返回</span>
                 </div>
             </div>
         </div>
 
         <div class="controls">
-            <button class="control-btn prev-btn" id="prevBtn"></button>
-            <button class="control-btn next-btn" id="nextBtn"></button>
+            <button class="icon-btn" id="prevBtn" aria-label="上一个单词">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button class="icon-btn" id="nextBtn" aria-label="下一个单词">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </button>
         </div>
 
         <div class="swipe-hint" id="swipeHint"></div>
@@ -367,15 +648,15 @@
     </div>
 
     <script>
-        // 词汇数据存储
+        // ============================================
+        // Data & State
+        // ============================================
+
         let wordLists = [];
-        
-        // 应用状态
         let currentUnitIndex = 0;
         let currentWordIndex = 0;
         let isFlipped = false;
 
-        // 示例数据（后备）
         const sampleWordLists = [
             {
                 id: 'wordlist01',
@@ -399,7 +680,10 @@
             }
         ];
 
-        // DOM元素
+        // ============================================
+        // DOM References
+        // ============================================
+
         const loadingContainerEl = document.getElementById('loadingContainer');
         const containerEl = document.getElementById('container');
         const errorContainerEl = document.getElementById('errorContainer');
@@ -413,24 +697,24 @@
         const progressFillEl = document.getElementById('progressFill');
         const prevBtnEl = document.getElementById('prevBtn');
         const nextBtnEl = document.getElementById('nextBtn');
+        const playBtnEl = document.getElementById('playBtn');
         const swipeHintEl = document.getElementById('swipeHint');
         const unitIndicatorEl = document.getElementById('unitIndicator');
 
-        // 文件解析函数
+        // ============================================
+        // Word Data Parser
+        // ============================================
+
         function parseWordData(text) {
             const lines = text.trim().split('\n');
             const lists = [];
             let currentList = null;
-            
+
             for (let line of lines) {
                 line = line.trim();
-                
-                // 检查是否为新单元的开始
                 const unitMatch = line.match(/^Word List\s*0?(\d+)/i);
                 if (unitMatch) {
-                    if (currentList) {
-                        lists.push(currentList);
-                    }
+                    if (currentList) lists.push(currentList);
                     currentList = {
                         id: `wordlist${unitMatch[1].padStart(2, '0')}`,
                         name: `Word List ${unitMatch[1].padStart(2, '0')}`,
@@ -438,295 +722,178 @@
                     };
                     continue;
                 }
-                
-                // 如果不是在单元内，跳过
-                if (!currentList) continue;
-                
-                // 跳过空行
-                if (!line) continue;
-                
-                // 使用正则表达式匹配单词、音标和释义
-                // 支持多种音标格式：/.../ 或 [...]
+                if (!currentList || !line) continue;
                 const match = line.match(/^(.+?)\s+([\/\[][^\]\/]+[\]\/])\s+(.+)$/);
                 if (match) {
-                    let word = match[1].trim();
+                    let word = match[1].trim().replace(/\*$/, '');
                     const phonetic = match[2].trim();
                     let definition = match[3].trim();
-                    
-                    // 移除单词后的星号
-                    word = word.replace(/\*$/, '');
-                    
-                    // 解析词性和释义
                     const defMatch = definition.match(/^([a-z]+\.)\s+(.+)$/i);
-                    let partOfSpeech = '';
-                    let defText = definition;
-                    
-                    if (defMatch) {
-                        partOfSpeech = defMatch[1];
-                        defText = defMatch[2];
-                    }
-                    
-                    currentList.words.push({
-                        word,
-                        phonetic,
-                        partOfSpeech,
-                        definition: defText
-                    });
+                    const partOfSpeech = defMatch ? defMatch[1] : '';
+                    const defText = defMatch ? defMatch[2] : definition;
+                    currentList.words.push({ word, phonetic, partOfSpeech, definition: defText });
                 }
             }
-            
-            // 添加最后一个单元
-            if (currentList) {
-                lists.push(currentList);
-            }
-            
+            if (currentList) lists.push(currentList);
             return lists;
         }
 
-        // 自动加载词汇文件
+        // ============================================
+        // App Lifecycle
+        // ============================================
+
         function loadWordFile() {
-            // 尝试从服务器根目录加载文件
             fetch('word-list.txt')
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('File not found');
-                    }
+                    if (!response.ok) throw new Error('File not found');
                     return response.text();
                 })
                 .then(text => {
                     wordLists = parseWordData(text);
-                    if (wordLists.length > 0) {
-                        startApp();
-                    } else {
-                        showError();
-                    }
+                    wordLists.length > 0 ? startApp() : showError();
                 })
-                .catch(error => {
-                    console.error('加载失败:', error);
-                    showError();
-                });
+                .catch(() => showError());
         }
 
-        // 显示错误信息并提供示例数据选项
         function showError() {
             document.getElementById('loadingSubtext').style.display = 'none';
             errorContainerEl.style.display = 'block';
         }
 
-        // 启动主应用
         function startApp() {
-            if (wordLists.length === 0) {
-                alert('词汇数据为空！');
-                return;
-            }
-            
+            if (wordLists.length === 0) return;
             loadingContainerEl.style.display = 'none';
             containerEl.style.display = 'flex';
-            
             currentUnitIndex = 0;
             currentWordIndex = 0;
             updateCard();
             setupGestureControls();
         }
 
-        // 更新卡片内容
+        // ============================================
+        // Card UI
+        // ============================================
+
         function updateCard() {
             if (wordLists.length === 0) return;
-            
-            const currentList = wordLists[currentUnitIndex];
-            if (!currentList || currentList.words.length === 0) return;
-            
-            const currentWord = currentList.words[currentWordIndex];
-            
-            wordTextEl.textContent = currentWord.word;
-            phoneticTextEl.textContent = currentWord.phonetic;
-            partOfSpeechEl.textContent = currentWord.partOfSpeech;
-            definitionTextEl.textContent = currentWord.definition;
-            
-            unitTitleEl.textContent = currentList.name;
-            
-            const progress = ((currentWordIndex + 1) / currentList.words.length) * 100;
-            progressFillEl.style.width = progress + '%';
-            
-            // 重置卡片翻转状态
+            const list = wordLists[currentUnitIndex];
+            if (!list || !list.words.length) return;
+            const w = list.words[currentWordIndex];
+            wordTextEl.textContent = w.word;
+            phoneticTextEl.textContent = w.phonetic;
+            partOfSpeechEl.textContent = w.partOfSpeech;
+            definitionTextEl.textContent = w.definition;
+            unitTitleEl.textContent = list.name;
+            progressFillEl.style.width = ((currentWordIndex + 1) / list.words.length * 100) + '%';
             wordCardEl.classList.remove('flipped');
             isFlipped = false;
         }
 
-        // 播放单词发音
         function playPronunciation() {
-            if (wordLists.length === 0) return;
-            
+            if (!wordLists.length) return;
             const word = wordLists[currentUnitIndex].words[currentWordIndex].word;
-            
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(word);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.8;
-                utterance.pitch = 1;
-                speechSynthesis.speak(utterance);
-            } else {
-                alert('您的浏览器不支持语音合成');
+                const u = new SpeechSynthesisUtterance(word);
+                u.lang = 'en-US';
+                u.rate = 0.8;
+                speechSynthesis.speak(u);
             }
         }
 
-        // 显示滑动提示
-        function showSwipeHint(message) {
-            swipeHintEl.textContent = message;
+        function showSwipeHint(msg) {
+            swipeHintEl.textContent = msg;
             swipeHintEl.classList.add('show');
-            setTimeout(() => {
-                swipeHintEl.classList.remove('show');
-            }, 1500);
+            setTimeout(() => swipeHintEl.classList.remove('show'), 1500);
         }
 
-        // 显示单元切换指示器
         function showUnitIndicator() {
             unitIndicatorEl.textContent = `Unit ${currentUnitIndex + 1}`;
+            unitIndicatorEl.classList.remove('show');
+            void unitIndicatorEl.offsetWidth;
             unitIndicatorEl.classList.add('show');
-            setTimeout(() => {
-                unitIndicatorEl.classList.remove('show');
-            }, 600);
+            setTimeout(() => unitIndicatorEl.classList.remove('show'), 600);
         }
 
-        // 切换到下一个单词（支持循环）
+        // ============================================
+        // Navigation
+        // ============================================
+
         function nextWord() {
-            if (wordLists.length === 0) return;
-            
-            const currentList = wordLists[currentUnitIndex];
-            currentWordIndex = (currentWordIndex + 1) % currentList.words.length;
+            if (!wordLists.length) return;
+            currentWordIndex = (currentWordIndex + 1) % wordLists[currentUnitIndex].words.length;
             updateCard();
-            
-            if (currentWordIndex === 0) {
-                //showSwipeHint('循环到第一个单词');
-            } else {
-                //showSwipeHint('下一个单词');
-            }
         }
 
-        // 切换到上一个单词（支持循环）
         function prevWord() {
-            if (wordLists.length === 0) return;
-            
-            const currentList = wordLists[currentUnitIndex];
-            currentWordIndex = (currentWordIndex - 1 + currentList.words.length) % currentList.words.length;
+            if (!wordLists.length) return;
+            const len = wordLists[currentUnitIndex].words.length;
+            currentWordIndex = (currentWordIndex - 1 + len) % len;
             updateCard();
-            
-            if (currentWordIndex === currentList.words.length - 1) {
-                //showSwipeHint('循环到最后一个单词');
-            } else {
-                //showSwipeHint('上一个单词');
-            }
         }
 
-        // 切换到下一个单元
         function nextUnit() {
-            if (wordLists.length === 0) return;
-            
-            if (wordLists.length > 1) {
-                currentUnitIndex = (currentUnitIndex + 1) % wordLists.length;
-                currentWordIndex = 0;
-                updateCard();
-                showUnitIndicator();
-                showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
-            } else {
-                showSwipeHint('只有一个单元');
-            }
+            if (!wordLists.length || wordLists.length < 2) return;
+            currentUnitIndex = (currentUnitIndex + 1) % wordLists.length;
+            currentWordIndex = 0;
+            updateCard();
+            showUnitIndicator();
+            showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
         }
 
-        // 切换到上一个单元
         function prevUnit() {
-            if (wordLists.length === 0) return;
-            
-            if (wordLists.length > 1) {
-                currentUnitIndex = (currentUnitIndex - 1 + wordLists.length) % wordLists.length;
-                currentWordIndex = 0;
-                updateCard();
-                showUnitIndicator();
-                showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
-            } else {
-                showSwipeHint('只有一个单元');
-            }
+            if (!wordLists.length || wordLists.length < 2) return;
+            currentUnitIndex = (currentUnitIndex - 1 + wordLists.length) % wordLists.length;
+            currentWordIndex = 0;
+            updateCard();
+            showUnitIndicator();
+            showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
         }
 
-        // 设置手势控制
+        // ============================================
+        // Gesture & Keyboard Controls
+        // ============================================
+
         function setupGestureControls() {
             const hammer = new Hammer(wordCardEl);
-            
-            // 启用所有方向的手势
             hammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
-            hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
-            
-            // 点击卡片翻转
+
             hammer.on('tap', (e) => {
                 e.preventDefault();
                 wordCardEl.classList.toggle('flipped');
                 isFlipped = !isFlipped;
             });
-            
-            // 左右滑动切换单词（循环）
-            hammer.on('swipeleft', (e) => {
-                e.preventDefault();
-                if (!isFlipped) {
-                    nextWord();
-                }
-            });
-            
-            hammer.on('swiperight', (e) => {
-                e.preventDefault();
-                if (!isFlipped) {
-                    prevWord();
-                }
-            });
-            
-            // 上下滑动切换单元
-            hammer.on('swipeup', (e) => {
-                e.preventDefault();
-                nextUnit();
-            });
-            
-            hammer.on('swipedown', (e) => {
-                e.preventDefault();
-                prevUnit();
-            });
-            
-            // 音标点击发音
+
+            hammer.on('swipeleft', (e) => { e.preventDefault(); if (!isFlipped) nextWord(); });
+            hammer.on('swiperight', (e) => { e.preventDefault(); if (!isFlipped) prevWord(); });
+            hammer.on('swipeup', (e) => { e.preventDefault(); nextUnit(); });
+            hammer.on('swipedown', (e) => { e.preventDefault(); prevUnit(); });
+
             phoneticTextEl.addEventListener('click', (e) => {
                 e.stopPropagation();
                 playPronunciation();
             });
-            
-            // 控制按钮
-            prevBtnEl.addEventListener('click', () => prevWord());
-            nextBtnEl.addEventListener('click', () => nextWord());
-            
-            // 键盘控制（桌面端）
+
+            prevBtnEl.addEventListener('click', prevWord);
+            nextBtnEl.addEventListener('click', nextWord);
+            playBtnEl.addEventListener('click', playPronunciation);
+
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowLeft') prevWord();
                 if (e.key === 'ArrowRight') nextWord();
                 if (e.key === 'ArrowUp') prevUnit();
                 if (e.key === 'ArrowDown') nextUnit();
-                if (e.key === ' ') {
-                    e.preventDefault();
-                    wordCardEl.classList.toggle('flipped');
-                    isFlipped = !isFlipped;
-                }
-                if (e.key === 'p') playPronunciation();
+                if (e.key === ' ') { e.preventDefault(); wordCardEl.classList.toggle('flipped'); isFlipped = !isFlipped; }
+                if (e.key === 'p' || e.key === 'P') playPronunciation();
             });
         }
 
-        // 使用示例数据
-        useSampleBtnEl.addEventListener('click', () => {
-            wordLists = sampleWordLists;
-            startApp();
-        });
+        // ============================================
+        // Boot
+        // ============================================
 
-        // 应用启动时自动加载文件
+        useSampleBtnEl.addEventListener('click', () => { wordLists = sampleWordLists; startApp(); });
         window.addEventListener('DOMContentLoaded', loadWordFile);
-
-        // 防止页面滚动
-        document.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     </script>
 </body>
 </html>
