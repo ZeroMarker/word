@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>IELTS 拼写练习</title>
+  <style>
+    :root { color-scheme: light; --ink:#17211b; --muted:#657069; --paper:#f5f2e9; --card:#fffdf7; --green:#176b45; --pale:#dcecdf; --red:#a53d32; --line:#d8d3c7; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,"Segoe UI","Noto Sans SC",sans-serif; color:var(--ink); background:radial-gradient(circle at 15% 10%,#e2edda 0,transparent 28%),var(--paper); }
+    button,input,select { font:inherit; }
+    .shell { width:min(760px,100%); margin:auto; padding:24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+    h1 { margin:0; font:700 clamp(24px,5vw,36px)/1.1 Georgia,serif; }
+    .back { color:var(--green); text-decoration:none; font-weight:650; }
+    .toolbar,.stats { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    select,.ghost { border:1px solid var(--line); border-radius:12px; background:var(--card); padding:9px 12px; color:var(--ink); }
+    .stats { margin:18px 0; }
+    .stat { flex:1; min-width:110px; padding:12px 15px; border:1px solid var(--line); border-radius:14px; background:rgba(255,253,247,.72); }
+    .stat strong { display:block; font-size:22px; }
+    .stat span { color:var(--muted); font-size:12px; }
+    .progress { height:7px; border-radius:10px; overflow:hidden; background:#dedbd1; margin-bottom:18px; }
+    .progress span { display:block; height:100%; width:0; background:var(--green); transition:width .25s; }
+    main { min-height:410px; padding:clamp(24px,6vw,52px); border:1px solid var(--line); border-radius:24px; background:var(--card); box-shadow:0 18px 55px rgba(51,59,51,.1); display:flex; flex-direction:column; justify-content:center; }
+    .eyebrow { color:var(--green); font-weight:700; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+    .definition { margin:14px 0 8px; font:650 clamp(22px,5vw,34px)/1.45 Georgia,"Noto Serif SC",serif; }
+    .meta { min-height:24px; color:var(--muted); }
+    .answer-row { display:flex; gap:10px; margin-top:26px; }
+    input { width:100%; min-width:0; padding:14px 16px; border:2px solid var(--line); border-radius:14px; background:white; outline:none; font-size:19px; }
+    input:focus { border-color:var(--green); box-shadow:0 0 0 3px #dcecdf; }
+    .primary { border:0; border-radius:14px; padding:0 22px; background:var(--green); color:white; font-weight:700; cursor:pointer; }
+    .feedback { min-height:58px; margin-top:18px; font-weight:650; }
+    .feedback.correct { color:var(--green); }
+    .feedback.wrong { color:var(--red); }
+    .correct-word { display:block; margin-top:4px; color:var(--ink); font-size:20px; }
+    .actions { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px; }
+    .ghost { cursor:pointer; }
+    .hidden { display:none !important; }
+    .empty { text-align:center; color:var(--muted); }
+    @media (max-width:560px) { .shell{padding:16px} header{align-items:flex-start}.answer-row{flex-direction:column}.primary{min-height:50px}main{min-height:430px}.actions{align-items:stretch;flex-direction:column} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><div><div class="eyebrow">另一种学习方式</div><h1>IELTS 拼写练习</h1></div><a class="back" href="../index.html">返回单词卡</a></header>
+    <div class="toolbar">
+      <label>练习单元 <select id="unitSelect" aria-label="练习单元"></select></label>
+      <button class="ghost" id="restartBtn" type="button">重新开始</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="score">0</strong><span>答对</span></div>
+      <div class="stat"><strong id="streak">0</strong><span>连续答对</span></div>
+      <div class="stat"><strong id="remaining">0</strong><span>剩余题目</span></div>
+    </div>
+    <div class="progress"><span id="progress"></span></div>
+    <main id="quiz">
+      <div class="eyebrow" id="questionNo">根据释义拼写单词</div>
+      <div class="definition" id="definition">正在读取词库……</div>
+      <div class="meta" id="meta"></div>
+      <form class="answer-row" id="answerForm">
+        <input id="answer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入英文单词" aria-label="英文答案">
+        <button class="primary" type="submit" id="submitBtn">检查</button>
+      </form>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+      <div class="actions">
+        <button class="ghost" id="hintBtn" type="button">显示提示</button>
+        <button class="primary hidden" id="nextBtn" type="button">下一题</button>
+      </div>
+    </main>
+  </div>
+  <script>
+    const state = { lists:[], unit:0, queue:[], cursor:0, score:0, streak:0, answered:false, hints:0 };
+    const $ = id => document.getElementById(id);
+
+    function parseWords(text) {
+      const lists=[]; let current=null;
+      for (let raw of text.replace(/\r/g,'').split('\n')) {
+        const line=raw.trim(); const unit=line.match(/^Word List\s*0?(\d+)/i);
+        if (unit) { if(current) lists.push(current); current={name:`Word List ${unit[1].padStart(2,'0')}`,words:[]}; continue; }
+        if (!current || !line) continue;
+        const match=line.match(/^(.+?)\s+(\/[^/]+\/|\[[^\]]+\]|\{[^}]+\})(?:\s*;\s*(?:\/[^/]+\/|\[[^\]]+\]|\{[^}]+\}))*\s+(.+)$/);
+        if (!match) continue;
+        const word=match[1].replace(/\*$/,'').trim();
+        const definition=match[3].replace(/^(?:n|v|vt|vi|a|ad|adv|prep|conj|pron|num|excl|int)\.(?:\/(?:n|v|vt|vi|a|ad|adv)\.)*\s*/i,'');
+        current.words.push({word,phonetic:match[2],definition});
+      }
+      if(current) lists.push(current); return lists.filter(x=>x.words.length);
+    }
+
+    function shuffle(items) {
+      const copy=[...items];
+      for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}
+      return copy;
+    }
+
+    function start() {
+      const words=state.lists[state.unit]?.words || [];
+      state.queue=shuffle(words).slice(0,20); state.cursor=0; state.score=0; state.streak=0; state.hints=0;
+      renderStats(); renderQuestion();
+    }
+
+    function current(){ return state.queue[state.cursor]; }
+
+    function renderQuestion() {
+      state.answered=false; const item=current();
+      if(!item){
+        $('questionNo').textContent='本轮完成';
+        $('definition').textContent=`答对 ${state.score} / ${state.queue.length} 题`;
+        $('meta').textContent='可以重新开始，再练一组随机单词。';
+        $('answerForm').classList.add('hidden'); $('hintBtn').classList.add('hidden'); $('nextBtn').classList.add('hidden'); $('feedback').textContent=''; return;
+      }
+      $('answerForm').classList.remove('hidden'); $('hintBtn').classList.remove('hidden');
+      $('questionNo').textContent=`第 ${state.cursor+1} 题 · 根据释义拼写`;
+      $('definition').textContent=item.definition; $('meta').textContent=''; $('answer').value=''; $('answer').disabled=false;
+      $('submitBtn').classList.remove('hidden'); $('nextBtn').classList.add('hidden'); $('feedback').textContent=''; $('feedback').className='feedback';
+      $('answer').focus(); renderStats();
+    }
+
+    function checkAnswer(event) {
+      event.preventDefault(); if(state.answered || !current()) return;
+      const actual=current().word.toLowerCase().trim(); const given=$('answer').value.toLowerCase().trim();
+      if(!given){$('feedback').textContent='请先输入答案。'; return;}
+      state.answered=true; const correct=given===actual;
+      if(correct){state.score++;state.streak++;$('feedback').innerHTML='拼写正确！';$('feedback').className='feedback correct';}
+      else {state.streak=0;$('feedback').innerHTML=`还差一点，正确答案是：<span class="correct-word">${escapeHtml(current().word)}</span>`;$('feedback').className='feedback wrong';}
+      $('meta').textContent=current().phonetic; $('answer').disabled=true; $('submitBtn').classList.add('hidden'); $('nextBtn').classList.remove('hidden'); $('nextBtn').focus(); renderStats(); saveResult(correct);
+    }
+
+    function next(){state.cursor++;renderQuestion();}
+    function showHint(){const word=current()?.word||'';state.hints++;$('meta').textContent=`提示：${word[0]}${' ·'.repeat(Math.max(0,word.length-1))}（${word.length} 个字母）`;}
+    function renderStats(){$('score').textContent=state.score;$('streak').textContent=state.streak;$('remaining').textContent=Math.max(0,state.queue.length-state.cursor);$('progress').style.width=`${state.queue.length?state.cursor/state.queue.length*100:0}%`;}
+    function saveResult(correct){try{const old=JSON.parse(localStorage.getItem('ielts-spelling-stats-v1'))||{attempts:0,correct:0};old.attempts++;if(correct)old.correct++;localStorage.setItem('ielts-spelling-stats-v1',JSON.stringify(old));}catch{}}
+    function escapeHtml(value){const node=document.createElement('span');node.textContent=value;return node.innerHTML;}
+
+    fetch('../word-list.txt').then(r=>{if(!r.ok)throw Error();return r.text();}).then(text=>{
+      state.lists=parseWords(text); state.lists.forEach((list,i)=>$('unitSelect').add(new Option(`${list.name} · ${list.words.length} 词`,i))); start();
+    }).catch(()=>{$('definition').textContent='词库加载失败';$('meta').textContent='请从项目根目录启动静态服务器后再访问。';$('answerForm').classList.add('hidden');});
+    $('answerForm').addEventListener('submit',checkAnswer); $('nextBtn').addEventListener('click',next); $('hintBtn').addEventListener('click',showHint); $('restartBtn').addEventListener('click',start);
+    $('unitSelect').addEventListener('change',event=>{state.unit=Number(event.target.value);start();});
+  </script>
+</body>
+</html>
