@@ -14,7 +14,7 @@
     h1 { margin:0; font-size:clamp(25px,5vw,42px); letter-spacing:-.04em; }
     .kicker { color:var(--cyan); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
     .back { color:var(--cyan); text-decoration:none; font-weight:700; white-space:nowrap; }
-    .hud { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .hud { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
     .hud-item { padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:rgba(31,41,55,.82); }
     .hud-item strong { display:block; font-size:22px; }
     .hud-item span { color:var(--muted); font-size:11px; }
@@ -27,6 +27,8 @@
     .primary { padding:13px 24px; border:0; border-radius:13px; background:var(--cyan); color:#083344; font-weight:850; cursor:pointer; }
     .primary:hover { filter:brightness(1.08); transform:translateY(-1px); }
     .round-head { display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:13px; margin-bottom:20px; }
+    .round-actions { display:flex; align-items:center; gap:12px; }
+    .pause { border:1px solid var(--line); border-radius:999px; padding:5px 11px; color:var(--text); background:transparent; cursor:pointer; }
     .columns { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
     .column { display:grid; gap:10px; align-content:start; }
     .column-title { margin:0 0 2px; color:var(--muted); font-size:12px; letter-spacing:.1em; text-transform:uppercase; }
@@ -38,9 +40,13 @@
     .definition { font-size:14px; line-height:1.35; }
     .toast { min-height:30px; margin-top:18px; text-align:center; font-weight:750; }
     .toast.good { color:var(--green); }.toast.bad { color:var(--red); }
+    .pause-layer { position:absolute; inset:0; display:grid; place-content:center; gap:14px; text-align:center; border-radius:24px; background:rgba(17,24,39,.94); z-index:3; }
+    .pause-layer h2 { margin:0; font-size:30px; }
+    .arena { position:relative; }
     .hidden { display:none!important; }
     @keyframes shake { 25%{transform:translateX(-5px)}75%{transform:translateX(5px)} }
-    @media(max-width:620px){.shell{padding:14px}.hud{grid-template-columns:1fr 1fr}.columns{gap:10px}.tile{min-height:76px;padding:10px;font-size:14px}.arena{padding:16px}.definition{font-size:12px}header{align-items:flex-start}}
+    @media(max-width:620px){.shell{padding:14px}.hud{grid-template-columns:repeat(2,1fr)}.hud-item:last-child{grid-column:1/-1}.columns{gap:10px}.tile{min-height:76px;padding:10px;font-size:14px}.arena{padding:16px}.definition{font-size:12px}header{align-items:flex-start}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -51,6 +57,7 @@
       <div class="hud-item"><strong id="combo">×0</strong><span>连击</span></div>
       <div class="hud-item"><strong id="lives">♥ ♥ ♥</strong><span>生命</span></div>
       <div class="hud-item"><strong id="level">1</strong><span>关卡</span></div>
+      <div class="hud-item"><strong id="best">0</strong><span>最高分</span></div>
     </section>
     <div class="timer"><span id="timerBar"></span></div>
     <main class="arena">
@@ -61,7 +68,7 @@
         <button class="primary" id="startBtn" type="button">开始游戏</button>
       </section>
       <section id="game" class="hidden">
-        <div class="round-head"><span id="roundLabel">第 1 组</span><span>每组配对 5 个单词</span></div>
+        <div class="round-head"><span id="roundLabel">第 1 组</span><div class="round-actions"><span>每组 5 词</span><button class="pause" id="pauseBtn" type="button">暂停</button></div></div>
         <div class="columns">
           <div class="column"><h2 class="column-title">英文单词</h2><div class="column" id="words"></div></div>
           <div class="column"><h2 class="column-title">中文释义</h2><div class="column" id="definitions"></div></div>
@@ -73,11 +80,14 @@
         <p id="finalText"></p>
         <button class="primary" id="againBtn" type="button">再来一局</button>
       </section>
+      <section class="pause-layer hidden" id="pauseLayer" aria-live="polite">
+        <h2>游戏已暂停</h2><span>计时已经停止</span><button class="primary" id="resumeBtn" type="button">继续游戏</button>
+      </section>
     </main>
   </div>
   <script>
     const $=id=>document.getElementById(id);
-    const state={lists:[],pool:[],round:[],selectedWord:null,selectedDefinition:null,matched:0,score:0,combo:0,lives:3,level:1,roundNo:0,time:60,timer:null,running:false};
+    const state={lists:[],pool:[],round:[],selectedWord:null,selectedDefinition:null,matched:0,score:0,combo:0,maxCombo:0,lives:3,level:1,roundNo:0,completedRounds:0,time:60,deadline:0,timer:null,running:false,paused:false,locked:false,best:0};
 
     function parseWords(text){
       const lists=[];let current=null;
@@ -94,48 +104,64 @@
       if(current)lists.push(current);return lists.filter(list=>list.words.length>=5);
     }
     function shuffle(items){const a=[...items];for(let i=a.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+    function pickRound(pool,count){
+      const picked=[],definitions=new Set();
+      for(const item of shuffle(pool)){
+        const key=item.definition.replace(/\s+/g,'').toLowerCase();
+        if(definitions.has(key))continue;
+        picked.push(item);definitions.add(key);
+        if(picked.length===count)break;
+      }
+      return picked;
+    }
     function start(){
       const choice=$('unitSelect').value;
       state.pool=choice==='all'?state.lists.flatMap(x=>x.words):state.lists[Number(choice)].words;
-      Object.assign(state,{selectedWord:null,selectedDefinition:null,matched:0,score:0,combo:0,lives:3,level:1,roundNo:0,time:60,running:true});
+      Object.assign(state,{selectedWord:null,selectedDefinition:null,matched:0,score:0,combo:0,maxCombo:0,lives:3,level:1,roundNo:0,completedRounds:0,time:60,running:true,paused:false,locked:false});
       $('setup').classList.add('hidden');$('gameOver').classList.add('hidden');$('game').classList.remove('hidden');
-      clearInterval(state.timer);state.timer=setInterval(tick,100);nextRound();renderHud();
+      $('pauseLayer').classList.add('hidden');state.deadline=Date.now()+60000;
+      clearInterval(state.timer);state.timer=setInterval(tick,100);nextRound();renderHud();tick();
     }
-    function tick(){state.time=Math.max(0,state.time-.1);$('timerBar').style.width=`${state.time/60*100}%`;$('timerBar').style.background=state.time<10?'var(--red)':'var(--cyan)';if(state.time<=0)finish('时间到！');}
+    function tick(){if(!state.running||state.paused)return;state.time=Math.max(0,(state.deadline-Date.now())/1000);$('timerBar').style.width=`${state.time/60*100}%`;$('timerBar').style.background=state.time<10?'var(--red)':'var(--cyan)';if(state.time<=0)finish('时间到！');}
     function nextRound(){
-      state.roundNo++;state.matched=0;state.selectedWord=null;state.selectedDefinition=null;
-      state.round=shuffle(state.pool).slice(0,5).map((item,index)=>({...item,pair:String(index)}));
+      state.roundNo++;state.matched=0;state.selectedWord=null;state.selectedDefinition=null;state.locked=false;
+      state.round=pickRound(state.pool,5).map((item,index)=>({...item,pair:String(index)}));
       $('roundLabel').textContent=`第 ${state.roundNo} 组`;$('toast').textContent='';
       renderTiles('words',shuffle(state.round),'word');renderTiles('definitions',shuffle(state.round),'definition');
     }
     function renderTiles(target,items,type){
-      $(target).innerHTML='';items.forEach(item=>{const button=document.createElement('button');button.type='button';button.className=`tile ${type==='definition'?'definition':''}`;button.textContent=item[type];button.dataset.pair=item.pair;button.addEventListener('click',()=>select(button,type));$(target).appendChild(button);});
+      $(target).innerHTML='';items.forEach((item,index)=>{const button=document.createElement('button');button.type='button';button.className=`tile ${type==='definition'?'definition':''}`;button.textContent=item[type];button.dataset.pair=item.pair;button.setAttribute('aria-label',`${type==='word'?'单词':'释义'} ${index+1}：${item[type]}`);button.setAttribute('aria-pressed','false');button.addEventListener('click',()=>select(button,type));$(target).appendChild(button);});
     }
     function select(button,type){
-      if(!state.running||button.classList.contains('matched'))return;
+      if(!state.running||state.paused||state.locked||button.classList.contains('matched'))return;
       const key=type==='word'?'selectedWord':'selectedDefinition';
-      const prior=state[key];if(prior)prior.classList.remove('selected');state[key]=button;button.classList.add('selected');
+      const prior=state[key];if(prior){prior.classList.remove('selected');prior.setAttribute('aria-pressed','false');}state[key]=button;button.classList.add('selected');button.setAttribute('aria-pressed','true');
       if(state.selectedWord&&state.selectedDefinition)checkPair();
     }
     function checkPair(){
       const word=state.selectedWord,definition=state.selectedDefinition;state.selectedWord=null;state.selectedDefinition=null;
       if(word.dataset.pair===definition.dataset.pair){
-        word.classList.replace('selected','matched');definition.classList.replace('selected','matched');state.matched++;state.combo++;state.score+=100+Math.min(state.combo,10)*10;
+        word.classList.replace('selected','matched');definition.classList.replace('selected','matched');word.disabled=true;definition.disabled=true;state.matched++;state.combo++;state.maxCombo=Math.max(state.maxCombo,state.combo);state.score+=100+Math.min(state.combo,10)*10;
         showToast(`正确！连击 ×${state.combo}`,'good');
-        if(state.matched===state.round.length){state.level++;state.time=Math.min(60,state.time+4);setTimeout(()=>state.running&&nextRound(),550);}
+        if(state.matched===state.round.length){state.locked=true;state.completedRounds++;state.level++;state.deadline=Math.min(Date.now()+60000,state.deadline+4000);showToast('本组完成，奖励 4 秒！','good');setTimeout(()=>state.running&&!state.paused&&nextRound(),700);}
       }else{
-        state.combo=0;state.lives--;word.classList.add('wrong');definition.classList.add('wrong');showToast('配对错误，失去一颗生命','bad');
-        setTimeout(()=>{word.classList.remove('selected','wrong');definition.classList.remove('selected','wrong');},350);
+        state.locked=true;state.combo=0;state.lives--;word.classList.add('wrong');definition.classList.add('wrong');showToast('配对错误，失去一颗生命','bad');
+        setTimeout(()=>{word.classList.remove('selected','wrong');definition.classList.remove('selected','wrong');word.setAttribute('aria-pressed','false');definition.setAttribute('aria-pressed','false');state.locked=false;},350);
         if(state.lives<=0)setTimeout(()=>finish('生命用尽'),380);
       }renderHud();
     }
     function showToast(text,type){$('toast').textContent=text;$('toast').className=`toast ${type}`;}
-    function renderHud(){$('score').textContent=state.score;$('combo').textContent=`×${state.combo}`;$('lives').textContent='♥ '.repeat(state.lives).trim()||'—';$('level').textContent=state.level;}
-    function finish(reason){if(!state.running)return;state.running=false;clearInterval(state.timer);$('game').classList.add('hidden');$('gameOver').classList.remove('hidden');$('finalTitle').textContent=`${reason} · ${state.score} 分`;$('finalText').textContent=`完成 ${state.roundNo-1} 组，最高连击会让每次正确配对获得更多奖励。`;saveHighScore();}
-    function saveHighScore(){try{const best=Math.max(state.score,Number(localStorage.getItem('ielts-match-best-v1'))||0);localStorage.setItem('ielts-match-best-v1',String(best));$('finalText').textContent+=` 本机最高分：${best}。`;}catch{}}
+    function renderHud(){$('score').textContent=state.score;$('combo').textContent=`×${state.combo}`;$('lives').textContent='♥ '.repeat(state.lives).trim()||'—';$('level').textContent=state.level;$('best').textContent=Math.max(state.best,state.score);}
+    function togglePause(forceResume=false){if(!state.running)return;if(forceResume||state.paused){state.paused=false;state.deadline=Date.now()+state.time*1000;$('pauseLayer').classList.add('hidden');$('pauseBtn').textContent='暂停';if(state.matched===state.round.length)nextRound();$('pauseBtn').focus();}else{tick();state.paused=true;$('pauseLayer').classList.remove('hidden');$('pauseBtn').textContent='继续';$('resumeBtn').focus();}}
+    function finish(reason){if(!state.running)return;state.running=false;state.paused=false;clearInterval(state.timer);$('pauseLayer').classList.add('hidden');$('game').classList.add('hidden');$('gameOver').classList.remove('hidden');$('finalTitle').textContent=`${reason} · ${state.score} 分`;$('finalText').textContent=`完成 ${state.completedRounds} 组，最高连击 ×${state.maxCombo}。`;saveHighScore();$('againBtn').focus();}
+    function saveHighScore(){try{state.best=Math.max(state.score,state.best);localStorage.setItem('ielts-match-best-v1',String(state.best));$('finalText').textContent+=` 本机最高分：${state.best}。`;$('best').textContent=state.best;}catch{}}
 
-    fetch('../word-list.txt').then(r=>{if(!r.ok)throw Error();return r.text();}).then(text=>{state.lists=parseWords(text);state.lists.forEach((list,index)=>$('unitSelect').add(new Option(`${list.name} · ${list.words.length} 词`,index)));}).catch(()=>{$('startBtn').disabled=true;$('startBtn').textContent='词库加载失败';});
-    $('startBtn').addEventListener('click',start);$('againBtn').addEventListener('click',()=>{$('gameOver').classList.add('hidden');$('setup').classList.remove('hidden');});
+    try{state.best=Number(localStorage.getItem('ielts-match-best-v1'))||0;}catch{}$('best').textContent=state.best;
+    fetch('../word-list.txt').then(r=>{if(!r.ok)throw Error();return r.text();}).then(text=>{state.lists=parseWords(text);state.lists.forEach((list,index)=>$('unitSelect').add(new Option(`${list.name} · ${list.words.length} 词`,index)));$('startBtn').disabled=false;$('startBtn').textContent='开始游戏';}).catch(()=>{$('startBtn').disabled=true;$('startBtn').textContent='词库加载失败';});
+    $('startBtn').disabled=true;$('startBtn').textContent='正在加载词库…';
+    $('startBtn').addEventListener('click',start);$('pauseBtn').addEventListener('click',()=>togglePause());$('resumeBtn').addEventListener('click',()=>togglePause(true));$('againBtn').addEventListener('click',()=>{$('gameOver').classList.add('hidden');$('setup').classList.remove('hidden');$('startBtn').focus();});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.running)togglePause();});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.running&&!state.paused)togglePause();});
   </script>
 </body>
 </html>
