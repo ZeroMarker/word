@@ -540,6 +540,174 @@
         }
 
         /* ========================================
+           Unit Picker — Material 3 Bottom Sheet
+           ======================================== */
+
+        .scrim {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.32);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s var(--md-motion-emphasized);
+            z-index: 100;
+        }
+
+        .scrim.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+            max-height: 78dvh;
+            background: var(--md-surface);
+            border-radius: var(--md-shape-xl) var(--md-shape-xl) 0 0;
+            box-shadow: var(--md-elevation-3);
+            transform: translateY(105%);
+            visibility: hidden;
+            transition: transform 0.32s var(--md-motion-emphasized-decel), visibility 0s linear 0.32s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bottom-sheet.show {
+            visibility: visible;
+            transform: translateY(0);
+            transition: transform 0.32s var(--md-motion-emphasized-decel);
+        }
+
+        .bottom-sheet__handle {
+            width: 32px;
+            height: 4px;
+            border-radius: var(--md-shape-full);
+            background: var(--md-outline-variant);
+            margin: 12px auto 4px;
+            flex-shrink: 0;
+        }
+
+        .bottom-sheet__header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 8px 24px 16px;
+        }
+
+        .bottom-sheet__title {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 24px;
+            letter-spacing: 0.15px;
+            color: var(--md-on-surface);
+            flex-shrink: 0;
+        }
+
+        .bottom-sheet__subtitle {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            letter-spacing: 0.4px;
+            color: var(--md-on-surface-variant);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+            gap: 10px;
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 4px 24px calc(24px + env(safe-area-inset-bottom));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .unit-chip {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 6px 8px;
+            border: 1px solid var(--md-outline-variant);
+            border-radius: var(--md-shape-md);
+            background: var(--md-surface);
+            color: var(--md-on-surface-variant);
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .unit-chip:hover {
+            background: var(--md-surface-variant);
+        }
+
+        .unit-chip:active {
+            background: var(--md-outline-variant);
+        }
+
+        .unit-chip:focus-visible {
+            outline: 3px solid var(--md-primary);
+            outline-offset: 2px;
+        }
+
+        .unit-chip.active {
+            background: var(--md-primary-container);
+            border-color: transparent;
+            color: var(--md-on-primary-container);
+        }
+
+        .unit-chip__num {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+        }
+
+        .unit-chip__bar {
+            width: 100%;
+            height: 3px;
+            border-radius: var(--md-shape-full);
+            background: var(--md-surface-variant);
+            overflow: hidden;
+        }
+
+        .unit-chip.active .unit-chip__bar {
+            background: rgba(33, 0, 93, 0.15);
+        }
+
+        .unit-chip__fill {
+            display: block;
+            height: 100%;
+            width: 0%;
+            border-radius: var(--md-shape-full);
+            background: var(--md-primary);
+            transition: width 0.3s var(--md-motion-emphasized);
+        }
+
+        .unit-chip__meta {
+            font-size: 10px;
+            font-weight: 400;
+            line-height: 14px;
+            letter-spacing: 0.4px;
+            opacity: 0.85;
+        }
+
+        /* ========================================
            Responsive
            ======================================== */
 
@@ -579,6 +747,19 @@
 
             .icon-btn .material-symbols-outlined {
                 font-size: 24px;
+            }
+
+            .bottom-sheet__header {
+                padding: 8px 16px 12px;
+            }
+
+            .unit-grid {
+                padding: 4px 16px calc(20px + env(safe-area-inset-bottom));
+                gap: 8px;
+            }
+
+            .unit-chip {
+                padding: 8px 4px 6px;
             }
         }
 
@@ -626,6 +807,9 @@
         <header class="top-app-bar">
             <div class="top-app-bar__row">
                 <h1 class="top-app-bar__title" id="unitTitle">未加载单元</h1>
+                <button type="button" class="top-app-bar__action" id="unitPickerBtn" aria-label="选择单元">
+                    <span class="material-symbols-outlined">grid_view</span>
+                </button>
                 <button type="button" class="top-app-bar__action" id="playBtn" aria-label="播放发音">
                     <span class="material-symbols-outlined">volume_up</span>
                 </button>
@@ -666,6 +850,17 @@
         <div class="unit-indicator" id="unitIndicator"></div>
     </div>
 
+    <!-- ======== Unit Picker Bottom Sheet ======== -->
+    <div class="scrim" id="scrim"></div>
+    <aside class="bottom-sheet" id="unitSheet" role="dialog" aria-modal="true" aria-label="单元选择">
+        <div class="bottom-sheet__handle" aria-hidden="true"></div>
+        <div class="bottom-sheet__header">
+            <h2 class="bottom-sheet__title">选择单元</h2>
+            <p class="bottom-sheet__subtitle" id="unitSheetSubtitle"></p>
+        </div>
+        <div class="unit-grid" id="unitGrid"></div>
+    </aside>
+
     <script>
         // ============================================
         // Data & State
@@ -675,6 +870,8 @@
         let currentUnitIndex = 0;
         let currentWordIndex = 0;
         let isFlipped = false;
+        let unitProgress = {};
+        let sheetOpen = false;
         const STORAGE_KEY = 'ielts-word-cards-progress-v1';
 
         const sampleWordLists = [
@@ -719,6 +916,11 @@
         const prevBtnEl = document.getElementById('prevBtn');
         const nextBtnEl = document.getElementById('nextBtn');
         const playBtnEl = document.getElementById('playBtn');
+        const unitPickerBtnEl = document.getElementById('unitPickerBtn');
+        const scrimEl = document.getElementById('scrim');
+        const unitSheetEl = document.getElementById('unitSheet');
+        const unitGridEl = document.getElementById('unitGrid');
+        const unitSheetSubtitleEl = document.getElementById('unitSheetSubtitle');
         const swipeHintEl = document.getElementById('swipeHint');
         const unitIndicatorEl = document.getElementById('unitIndicator');
 
@@ -790,29 +992,62 @@
             loadingContainerEl.style.display = 'none';
             containerEl.style.display = 'flex';
             restoreProgress();
+            renderUnitGrid();
             updateCard();
             setupGestureControls();
         }
 
-        function restoreProgress() {
-            try {
-                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                currentUnitIndex = Math.min(Math.max(Number(saved?.unit) || 0, 0), wordLists.length - 1);
-                currentWordIndex = Math.min(
-                    Math.max(Number(saved?.word) || 0, 0),
-                    wordLists[currentUnitIndex].words.length - 1
-                );
-            } catch {
-                currentUnitIndex = 0;
-                currentWordIndex = 0;
+        function sanitizeUnitProgress(map) {
+            const out = {};
+            for (const key of Object.keys(map)) {
+                const i = Number(key);
+                if (!Number.isInteger(i) || i < 0 || i >= wordLists.length) continue;
+                const w = Number(map[key]);
+                out[i] = Number.isInteger(w) && w >= 0 ? Math.min(w, wordLists[i].words.length - 1) : 0;
             }
+            return out;
+        }
+
+        function restoreProgress() {
+            let saved = null;
+            try {
+                saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            } catch {
+                saved = null;
+            }
+            // Always start from a clean slate so a repeated startApp() (e.g. the
+            // sample-data fallback) or corrupt storage can never leak stale state.
+            unitProgress = {};
+            let targetUnit = 0;
+            if (saved && typeof saved === 'object') {
+                if (saved.unitProgress && typeof saved.unitProgress === 'object') {
+                    // New per-unit format: { unitProgress: { [unitIndex]: wordIndex }, lastUnit }
+                    unitProgress = sanitizeUnitProgress(saved.unitProgress);
+                    const lu = Number(saved.lastUnit);
+                    targetUnit = Number.isInteger(lu) && lu >= 0 ? clampUnit(lu) : 0;
+                } else if (Number.isInteger(Number(saved.unit))) {
+                    // Legacy { unit, word } format → migrate to per-unit map
+                    const u = clampUnit(Number(saved.unit) || 0);
+                    const w = Number(saved.word);
+                    unitProgress = {
+                        [u]: Number.isInteger(w) && w > 0 ? Math.min(w, wordLists[u].words.length - 1) : 0
+                    };
+                    targetUnit = u;
+                }
+            }
+            currentUnitIndex = Number.isInteger(targetUnit) && targetUnit >= 0 && targetUnit < wordLists.length
+                ? targetUnit
+                : 0;
+            currentWordIndex = unitProgress[currentUnitIndex] ?? 0;
+            currentWordIndex = Math.min(currentWordIndex, wordLists[currentUnitIndex].words.length - 1);
         }
 
         function saveProgress() {
             try {
+                unitProgress[currentUnitIndex] = currentWordIndex;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    unit: currentUnitIndex,
-                    word: currentWordIndex
+                    unitProgress,
+                    lastUnit: currentUnitIndex
                 }));
             } catch {
                 // Storage may be unavailable in private or restricted browsing modes.
@@ -894,22 +1129,113 @@
             updateCard();
         }
 
-        function nextUnit() {
+        function clampUnit(index) {
+            return Math.min(Math.max(index, 0), wordLists.length - 1);
+        }
+
+        function goToUnit(index) {
             if (!wordLists.length || wordLists.length < 2) return;
-            currentUnitIndex = (currentUnitIndex + 1) % wordLists.length;
-            currentWordIndex = 0;
+            const target = clampUnit(index);
+            if (target === currentUnitIndex) return;
+            unitProgress[currentUnitIndex] = currentWordIndex;
+            currentUnitIndex = target;
+            currentWordIndex = unitProgress[target] ?? 0;
+            currentWordIndex = Math.min(currentWordIndex, wordLists[currentUnitIndex].words.length - 1);
             updateCard();
             showUnitIndicator();
             showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
         }
 
+        function nextUnit() {
+            if (!wordLists.length || wordLists.length < 2) return;
+            goToUnit((currentUnitIndex + 1) % wordLists.length);
+        }
+
         function prevUnit() {
             if (!wordLists.length || wordLists.length < 2) return;
-            currentUnitIndex = (currentUnitIndex - 1 + wordLists.length) % wordLists.length;
-            currentWordIndex = 0;
-            updateCard();
-            showUnitIndicator();
-            showSwipeHint(`切换到 ${wordLists[currentUnitIndex].name}`);
+            goToUnit((currentUnitIndex - 1 + wordLists.length) % wordLists.length);
+        }
+
+        // ============================================
+        // Unit Picker — Bottom Sheet
+        // ============================================
+
+        function renderUnitGrid() {
+            unitGridEl.innerHTML = '';
+            wordLists.forEach((list, i) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'unit-chip';
+                chip.dataset.index = String(i);
+
+                const num = document.createElement('span');
+                num.className = 'unit-chip__num';
+                num.textContent = String(i + 1).padStart(2, '0');
+
+                const bar = document.createElement('span');
+                bar.className = 'unit-chip__bar';
+                const fill = document.createElement('span');
+                fill.className = 'unit-chip__fill';
+                bar.appendChild(fill);
+
+                const meta = document.createElement('span');
+                meta.className = 'unit-chip__meta';
+
+                chip.append(num, bar, meta);
+                chip.addEventListener('click', () => {
+                    goToUnit(i);
+                    closeUnitSheet();
+                });
+                unitGridEl.appendChild(chip);
+            });
+            unitSheetSubtitleEl.textContent = `共 ${wordLists.length} 个单元 · 点击跳转，返回时自动恢复该单元进度`;
+        }
+
+        function refreshUnitGrid() {
+            const chips = unitGridEl.querySelectorAll('.unit-chip');
+            wordLists.forEach((list, i) => {
+                const chip = chips[i];
+                if (!chip) return;
+                const total = list.words.length;
+                // `i in unitProgress` separates "visited (even at word 0)" from "never opened".
+                const pos = i in unitProgress ? Math.min((unitProgress[i] ?? 0) + 1, total) : 0;
+                chip.querySelector('.unit-chip__meta').textContent = `${pos}/${total}`;
+                chip.querySelector('.unit-chip__fill').style.width = `${pos / total * 100}%`;
+                chip.classList.toggle('active', i === currentUnitIndex);
+                chip.setAttribute('aria-label', `${list.name}，进度 ${pos}/${total}`);
+            });
+        }
+
+        function openUnitSheet() {
+            if (!wordLists.length) return;
+            refreshUnitGrid();
+            scrimEl.classList.add('show');
+            unitSheetEl.classList.add('show');
+            sheetOpen = true;
+            containerEl.setAttribute('aria-hidden', 'true');
+            const active = unitGridEl.querySelector('.unit-chip.active') || unitGridEl.querySelector('.unit-chip');
+            if (active) active.focus();
+        }
+
+        function closeUnitSheet() {
+            scrimEl.classList.remove('show');
+            unitSheetEl.classList.remove('show');
+            sheetOpen = false;
+            containerEl.removeAttribute('aria-hidden');
+            unitPickerBtnEl.focus();
+        }
+
+        function moveUnitGridFocus(key) {
+            const chips = Array.from(unitGridEl.querySelectorAll('.unit-chip'));
+            if (!chips.length) return;
+            const cur = Math.max(chips.indexOf(document.activeElement), 0);
+            const cols = getComputedStyle(unitGridEl).gridTemplateColumns.split(' ').length || 4;
+            let next = cur;
+            if (key === 'ArrowRight') next = (cur + 1) % chips.length;
+            else if (key === 'ArrowLeft') next = (cur - 1 + chips.length) % chips.length;
+            else if (key === 'ArrowDown') next = Math.min(cur + cols, chips.length - 1);
+            else if (key === 'ArrowUp') next = Math.max(cur - cols, 0);
+            chips[next].focus();
         }
 
         // ============================================
@@ -954,7 +1280,21 @@
             nextBtnEl.addEventListener('click', nextWord);
             playBtnEl.addEventListener('click', playPronunciation);
 
+            unitPickerBtnEl.addEventListener('click', () => {
+                if (sheetOpen) {
+                    closeUnitSheet();
+                } else {
+                    openUnitSheet();
+                }
+            });
+            scrimEl.addEventListener('click', closeUnitSheet);
+
             document.addEventListener('keydown', (e) => {
+                if (sheetOpen) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeUnitSheet(); }
+                    else if (e.key.startsWith('Arrow')) { e.preventDefault(); moveUnitGridFocus(e.key); }
+                    return;
+                }
                 if (e.key === 'ArrowLeft') prevWord();
                 if (e.key === 'ArrowRight') nextWord();
                 if (e.key === 'ArrowUp') prevUnit();
