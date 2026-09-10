@@ -1,0 +1,3526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日一词 · 一词发散</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,0&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           Design Tokens（与主单词卡同风格：Material 3）
+           ======================================== */
+        :root {
+            --md-primary: #6750A4;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #EADDFF;
+            --md-on-primary-container: #21005D;
+
+            --md-surface: #FFFBFE;
+            --md-on-surface: #1C1B1F;
+            --md-surface-variant: #E7E0EC;
+            --md-on-surface-variant: #49454F;
+            --md-outline: #79747E;
+            --md-outline-variant: #CAC4D0;
+
+            --md-elevation-1: 0px 1px 3px 1px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.30);
+            --md-elevation-2: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.30);
+
+            /* 词性配色 */
+            --pos-n: #6750A4;
+            --pos-n-bg: #EADDFF;
+            --pos-v: #00696D;
+            --pos-v-bg: #C7ECEC;
+            --pos-a: #8A5800;
+            --pos-a-bg: #FFE2B8;
+
+            --fire: #E07000;
+            --green: #176B45;
+            --green-bg: #DCEEDF;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #F3EDFA 0%, #FFFBFE 280px);
+            color: var(--md-on-surface);
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ========================================
+           Top App Bar
+           ======================================== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 60px;
+            padding: 0 16px;
+            background: rgba(255, 251, 254, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 1px 0 var(--md-outline-variant);
+        }
+
+        .topbar .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            height: 40px;
+            padding: 0 8px 0 4px;
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            color: var(--md-primary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .topbar .back:hover {
+            background: rgba(103, 80, 164, 0.08);
+        }
+
+        .topbar .back .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        .topbar .title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0;
+        }
+
+        .streak-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: 34px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .streak-pill .material-symbols-outlined {
+            font-size: 17px;
+            color: var(--fire);
+        }
+
+        /* ========================================
+           主内容
+           ======================================== */
+        .wrap {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 18px 16px 40px;
+        }
+
+        /* ---- 日期栏 + 词性轮换 ---- */
+        .datebar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .datebar .date {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--md-on-surface);
+        }
+
+        .datebar .date small {
+            display: block;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--md-on-surface-variant);
+            margin-top: 2px;
+        }
+
+        .rotate {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--md-surface);
+            border: 1px solid var(--md-outline-variant);
+            border-radius: 999px;
+            padding: 5px 8px;
+        }
+
+        .rotate .seg {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: var(--md-on-surface-variant);
+            opacity: 0.5;
+            background: transparent;
+            border: none;
+        }
+
+        .rotate .seg.active {
+            color: #fff;
+            opacity: 1;
+        }
+
+        /* ---- 今日词汇卡 ---- */
+        .daily {
+            position: relative;
+            background: var(--md-surface);
+            border-radius: 24px;
+            box-shadow: var(--md-elevation-2);
+            padding: 30px 26px 26px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .daily--speaking::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: inset 0 0 0 3px var(--md-primary);
+            pointer-events: none;
+        }
+
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 18px;
+        }
+
+        .daily .word {
+            font-size: 40px;
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+            margin-bottom: 10px;
+        }
+
+        .phonetic {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px 7px 18px;
+            border-radius: 999px;
+            border: none;
+            background: var(--md-surface-variant);
+            color: var(--md-on-surface-variant);
+            font-size: 15px;
+            font-family: 'Times New Roman', Georgia, serif;
+            margin-bottom: 14px;
+        }
+
+        .phonetic:hover {
+            background: var(--md-outline-variant);
+        }
+
+        .phonetic .material-symbols-outlined {
+            font-size: 18px;
+            font-family: 'Material Symbols Outlined';
+        }
+
+        .daily .zh {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.7;
+            color: var(--md-on-surface);
+            max-width: 420px;
+            margin: 0 auto 0;
+        }
+
+        /* ---- 打卡 + 日期导航 ---- */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 14px 0 26px;
+        }
+
+        .checkin-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 999px;
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: var(--md-elevation-1);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+
+        .checkin-btn:active {
+            transform: scale(0.98);
+        }
+
+        .checkin-btn.done {
+            background: var(--green);
+        }
+
+        .checkin-btn .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        .daynav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .daynav button {
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid var(--md-outline-variant);
+            background: var(--md-surface);
+            color: var(--md-on-surface);
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 0 16px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .daynav button:hover {
+            background: var(--md-surface-variant);
+        }
+
+        .daynav .today-btn {
+            flex: 1;
+            justify-content: center;
+            border-color: transparent;
+            background: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+        }
+
+        .daynav .today-btn:hover {
+            background: #DDCCFB;
+        }
+
+        .daynav .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* ---- 小节标题 ---- */
+        .section-title {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin: 26px 6px 10px;
+        }
+
+        .section-title h2 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .section-title h2 .dot {
+            margin-right: 6px;
+        }
+
+        .section-title span.sub {
+            font-size: 12.5px;
+            color: var(--md-on-surface-variant);
+            font-weight: 400;
+        }
+
+        /* ---- 一词发散 · 同词性联想导图 ---- */
+        .map-wrap {
+            position: relative;
+            width: 100%;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(103, 80, 164, 0.06) 0%, rgba(103, 80, 164, 0) 62%);
+            border: 1px solid var(--md-outline-variant);
+            border-radius: 20px;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        .map-wrap svg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .mnode {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            min-width: 76px;
+            max-width: 132px;
+            padding: 7px 10px 6px;
+            border-radius: 14px;
+            border: 1px solid var(--md-outline-variant);
+            background: var(--md-surface);
+            box-shadow: var(--md-elevation-1);
+            text-align: center;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, opacity 0.35s ease;
+            font-size: 13px;
+        }
+
+        .mnode:hover {
+            transform: translate(-50%, -50%) translateY(-1px);
+            border-color: var(--md-primary);
+        }
+
+        .mnode.speaking {
+            border-color: var(--md-primary);
+            background: var(--md-primary-container);
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .mnode .mword {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mnode .mzh {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 500;
+            color: var(--md-on-surface-variant);
+            line-height: 1.45;
+            margin-top: 1px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mnode .mp {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 1px 7px;
+            border-radius: 999px;
+            margin-top: 4px;
+            color: #fff;
+            background: var(--mp, var(--md-primary));
+        }
+
+        /* 中心词节点 */
+        .mnode.center {
+            min-width: 128px;
+            max-width: 150px;
+            border: none;
+            color: #fff;
+            z-index: 2;
+            background: var(--mp, var(--md-primary));
+            padding: 13px 12px 11px;
+        }
+
+        .mnode.center .mword {
+            font-size: 16.5px;
+            letter-spacing: 0.01em;
+        }
+
+        .mnode.center .mzh {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 11.5px;
+        }
+
+        .mnode.center .mp {
+            background: rgba(255, 255, 255, 0.22);
+            color: #fff;
+        }
+
+        .map-note {
+            text-align: center;
+            font-size: 11.5px;
+            color: var(--md-on-surface-variant);
+            margin-top: 8px;
+        }
+
+        /* ---- 同义 / 反义词 ---- */
+        .pairs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .pair-card {
+            background: var(--md-surface);
+            border: 1px solid var(--md-outline-variant);
+            border-radius: 18px;
+            padding: 16px 14px;
+        }
+
+        .pair-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--md-on-surface);
+        }
+
+        .pair-card h3 .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .pair-card.syn h3 .dot {
+            background: #2E7D32;
+        }
+
+        .pair-card.ant h3 .dot {
+            background: #C62828;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .chips button {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--md-outline-variant);
+            background: #FBF8FC;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--md-on-surface);
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .chips button:hover {
+            border-color: var(--md-primary);
+            background: var(--md-primary-container);
+        }
+
+        .chips button small {
+            font-weight: 500;
+            color: var(--md-on-surface-variant);
+        }
+
+        .pair-card .empty {
+            font-size: 12.5px;
+            color: var(--md-on-surface-variant);
+        }
+
+        /* ---- 例句 ---- */
+        .example {
+            position: relative;
+            background: var(--md-primary-container);
+            border-radius: 20px;
+            padding: 20px 20px 18px 22px;
+            margin-top: 4px;
+        }
+
+        .example .quote {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 34px;
+            line-height: 1;
+            color: rgba(103, 80, 164, 0.28);
+            font-family: Georgia, serif;
+        }
+
+        .example .cap {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--md-on-primary-container);
+            opacity: 0.75;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .example .en {
+            font-size: 15.5px;
+            font-weight: 600;
+            line-height: 1.75;
+            color: var(--md-on-primary-container);
+            padding-right: 30px;
+        }
+
+        .example .zh {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--md-on-primary-container);
+            opacity: 0.85;
+            margin-top: 6px;
+        }
+
+        .example .say {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--md-primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--md-elevation-1);
+        }
+
+        .example .say .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        /* ---- 动画 ---- */
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rise {
+            animation: rise 0.45s var(--md-motion-emphasized-decel, cubic-bezier(0.05, 0.7, 0.1, 1)) both;
+        }
+
+        .mnode.fade-in {
+            animation: fadeIn 0.4s ease both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .daily {
+                padding: 24px 18px 22px;
+            }
+
+            .daily .word {
+                font-size: 34px;
+            }
+
+            .pairs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 640px) {
+            .wrap {
+                padding-top: 26px;
+            }
+
+            .daily .word {
+                font-size: 44px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="back" href="../index.html" aria-label="返回单词卡">
+            <span class="material-symbols-outlined">arrow_back</span>单词卡
+        </a>
+        <span class="title">每日一词</span>
+        <span class="streak-pill" id="streakPill" title="连续打卡天数">
+            <span class="material-symbols-outlined">local_fire_department</span>
+            <span id="streakText">0 天</span>
+        </span>
+    </header>
+
+    <div class="wrap">
+        <!-- 日期栏 -->
+        <section class="datebar rise">
+            <div class="date">
+                <span id="dateText">-</span>
+                <small id="dateSub">今天 · 词性轮换 名词→动词→形容词</small>
+            </div>
+            <div class="rotate" id="rotateBar" aria-label="词性轮换">
+                <button class="seg" data-pos="n">名词</button>
+                <button class="seg" data-pos="v">动词</button>
+                <button class="seg" data-pos="a">形容词</button>
+            </div>
+        </section>
+
+        <!-- 今日词汇 -->
+        <section class="daily rise" id="dailyCard" aria-label="今日词汇">
+            <span class="pos-badge" id="posBadge">-</span>
+            <h1 class="word" id="wordText">-</h1>
+            <button class="phonetic" id="phoneticBtn" aria-label="播放发音">
+                <span class="material-symbols-outlined">volume_up</span>
+                <span id="phoneticText">-</span>
+            </button>
+            <p class="zh" id="zhText">-</p>
+        </section>
+
+        <!-- 打卡 & 日期导航 -->
+        <section class="actions rise">
+            <button class="checkin-btn" id="checkinBtn" aria-label="打卡">
+                <span class="material-symbols-outlined">task_alt</span>
+                <span id="checkinText">今日打卡</span>
+            </button>
+            <div class="daynav">
+                <button id="prevDay" aria-label="前一天">
+                    <span class="material-symbols-outlined">chevron_left</span>昨天
+                </button>
+                <button class="today-btn" id="todayBtn">回到今天</button>
+                <button id="nextDay" aria-label="后一天">
+                    明天<span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 一词发散 · 同词性联想 -->
+        <div class="section-title rise">
+            <h2><span class="dot">🧩</span>一词发散 · 同词性联想</h2>
+            <span class="sub">点击任意词即可朗读</span>
+        </div>
+        <div class="map-wrap rise" id="mapWrap" aria-label="同词性联想发散图"></div>
+        <p class="map-note rise">同一词性发散：动词发散动词、名词发散名词、形容词发散形容词，近义与关联词串起来记。</p>
+
+        <!-- 同义 / 反义词 -->
+        <div class="pairs rise">
+            <section class="pair-card syn">
+                <h3><span class="dot"></span>同义词</h3>
+                <div class="chips" id="synChips"></div>
+            </section>
+            <section class="pair-card ant">
+                <h3><span class="dot"></span>反义词</h3>
+                <div class="chips" id="antChips"></div>
+            </section>
+        </div>
+
+        <!-- 例句 -->
+        <div class="section-title rise">
+            <h2><span class="dot">✍️</span>实用例句</h2>
+        </div>
+        <figure class="example rise">
+            <span class="quote">“</span>
+            <div class="cap"><span class="material-symbols-outlined">format_quote</span>语境中学单词</div>
+            <p class="en" id="exEn">-</p>
+            <figcaption class="zh" id="exZh">-</figcaption>
+            <button class="say" id="exSay" aria-label="朗读例句">
+                <span class="material-symbols-outlined">volume_up</span>
+            </button>
+        </figure>
+    </div>
+
+    <script>
+        // ================================================
+        // 词库（自含数据，离线可用）
+        // w 单词 | p 音标 | z 释义
+        // rel 同词性发散词 [单词, 释义]（动词发散动词，名词发散名词）
+        // s 同义词 [单词, 释义] | a 反义词 [单词, 释义]
+        // e 例句 [英文, 中文]
+        // ================================================
+        const SEEDS = {
+          "n": [
+            {
+              "w": "agriculture",
+              "p": "/ˈæɡrɪkʌltʃə(r)/",
+              "z": "农业；农耕",
+              "rel": [
+                [
+                  "farming",
+                  "农业，耕作"
+                ],
+                [
+                  "cultivation",
+                  "耕种；种植"
+                ],
+                [
+                  "crop",
+                  "农作物"
+                ],
+                [
+                  "harvest",
+                  "收获；收成"
+                ],
+                [
+                  "farmland",
+                  "农田"
+                ],
+                [
+                  "ranch",
+                  "大牧场"
+                ]
+              ],
+              "s": [
+                [
+                  "farming",
+                  "农业"
+                ],
+                [
+                  "husbandry",
+                  "农牧业"
+                ]
+              ],
+              "a": [
+                [
+                  "industry",
+                  "工业"
+                ]
+              ],
+              "e": [
+                "Agriculture employs a large share of the local population.",
+                "农业雇用了当地很大一部分人口。"
+              ]
+            },
+            {
+              "w": "environment",
+              "p": "/ɪnˈvaɪrənmənt/",
+              "z": "环境；自然环境",
+              "rel": [
+                [
+                  "surroundings",
+                  "周围环境"
+                ],
+                [
+                  "atmosphere",
+                  "气氛；大气"
+                ],
+                [
+                  "habitat",
+                  "栖息地"
+                ],
+                [
+                  "ecosystem",
+                  "生态系统"
+                ],
+                [
+                  "climate",
+                  "气候"
+                ],
+                [
+                  "nature",
+                  "大自然"
+                ]
+              ],
+              "s": [
+                [
+                  "surroundings",
+                  "周围环境"
+                ],
+                [
+                  "habitat",
+                  "栖息地"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "We must protect the environment for future generations.",
+                "我们必须为子孙后代保护环境。"
+              ]
+            },
+            {
+              "w": "opportunity",
+              "p": "/ˌɒpəˈtjuːnəti/",
+              "z": "机会；时机",
+              "rel": [
+                [
+                  "chance",
+                  "机会"
+                ],
+                [
+                  "occasion",
+                  "时机；场合"
+                ],
+                [
+                  "opening",
+                  "空缺；良机"
+                ],
+                [
+                  "prospect",
+                  "前景；可能性"
+                ],
+                [
+                  "possibility",
+                  "可能性"
+                ],
+                [
+                  "moment",
+                  "时机"
+                ]
+              ],
+              "s": [
+                [
+                  "chance",
+                  "机会"
+                ],
+                [
+                  "prospect",
+                  "前景"
+                ]
+              ],
+              "a": [
+                [
+                  "crisis",
+                  "危机"
+                ]
+              ],
+              "e": [
+                "The scholarship gives me the opportunity to study abroad.",
+                "这笔奖学金给了我出国留学的机会。"
+              ]
+            },
+            {
+              "w": "knowledge",
+              "p": "/ˈnɒlɪdʒ/",
+              "z": "知识；学识",
+              "rel": [
+                [
+                  "learning",
+                  "学识"
+                ],
+                [
+                  "wisdom",
+                  "智慧"
+                ],
+                [
+                  "understanding",
+                  "理解力"
+                ],
+                [
+                  "expertise",
+                  "专长"
+                ],
+                [
+                  "insight",
+                  "洞察力"
+                ],
+                [
+                  "information",
+                  "信息"
+                ]
+              ],
+              "s": [
+                [
+                  "learning",
+                  "学识"
+                ],
+                [
+                  "understanding",
+                  "理解"
+                ]
+              ],
+              "a": [
+                [
+                  "ignorance",
+                  "无知"
+                ]
+              ],
+              "e": [
+                "Knowledge is power.",
+                "知识就是力量。"
+              ]
+            },
+            {
+              "w": "decision",
+              "p": "/dɪˈsɪʒn/",
+              "z": "决定；决心",
+              "rel": [
+                [
+                  "choice",
+                  "选择"
+                ],
+                [
+                  "resolution",
+                  "决心"
+                ],
+                [
+                  "judgment",
+                  "判断"
+                ],
+                [
+                  "verdict",
+                  "裁决"
+                ],
+                [
+                  "conclusion",
+                  "结论"
+                ],
+                [
+                  "selection",
+                  "挑选"
+                ]
+              ],
+              "s": [
+                [
+                  "choice",
+                  "选择"
+                ],
+                [
+                  "resolution",
+                  "决心"
+                ]
+              ],
+              "a": [
+                [
+                  "hesitation",
+                  "犹豫"
+                ]
+              ],
+              "e": [
+                "It was a difficult decision to leave my hometown.",
+                "离开家乡是个艰难的决定。"
+              ]
+            },
+            {
+              "w": "community",
+              "p": "/kəˈmjuːnəti/",
+              "z": "社区；团体；共同体",
+              "rel": [
+                [
+                  "society",
+                  "社会"
+                ],
+                [
+                  "neighborhood",
+                  "邻里；街坊"
+                ],
+                [
+                  "district",
+                  "区域"
+                ],
+                [
+                  "group",
+                  "群体"
+                ],
+                [
+                  "public",
+                  "公众"
+                ],
+                [
+                  "residents",
+                  "居民"
+                ]
+              ],
+              "s": [
+                [
+                  "society",
+                  "社会"
+                ],
+                [
+                  "neighborhood",
+                  "街坊"
+                ]
+              ],
+              "a": [
+                [
+                  "isolation",
+                  "隔离"
+                ]
+              ],
+              "e": [
+                "The whole community joined in the annual festival.",
+                "整个社区都参加了年度庆典。"
+              ]
+            },
+            {
+              "w": "culture",
+              "p": "/ˈkʌltʃə(r)/",
+              "z": "文化；修养",
+              "rel": [
+                [
+                  "civilization",
+                  "文明"
+                ],
+                [
+                  "tradition",
+                  "传统"
+                ],
+                [
+                  "heritage",
+                  "遗产"
+                ],
+                [
+                  "custom",
+                  "习俗"
+                ],
+                [
+                  "belief",
+                  "信仰"
+                ],
+                [
+                  "art",
+                  "艺术"
+                ]
+              ],
+              "s": [
+                [
+                  "civilization",
+                  "文明"
+                ],
+                [
+                  "tradition",
+                  "传统"
+                ]
+              ],
+              "a": [
+                [
+                  "barbarism",
+                  "野蛮"
+                ]
+              ],
+              "e": [
+                "Language is an important part of national culture.",
+                "语言是民族文化的重要组成部分。"
+              ]
+            },
+            {
+              "w": "energy",
+              "p": "/ˈenədʒi/",
+              "z": "能量；精力",
+              "rel": [
+                [
+                  "power",
+                  "力量；电力"
+                ],
+                [
+                  "strength",
+                  "体力"
+                ],
+                [
+                  "vigor",
+                  "活力"
+                ],
+                [
+                  "force",
+                  "力量"
+                ],
+                [
+                  "stamina",
+                  "耐力"
+                ],
+                [
+                  "electricity",
+                  "电力"
+                ]
+              ],
+              "s": [
+                [
+                  "power",
+                  "力量"
+                ],
+                [
+                  "strength",
+                  "体力"
+                ]
+              ],
+              "a": [
+                [
+                  "exhaustion",
+                  "精疲力竭"
+                ]
+              ],
+              "e": [
+                "Solar energy is clean and renewable.",
+                "太阳能清洁且可再生。"
+              ]
+            },
+            {
+              "w": "education",
+              "p": "/ˌedʒuˈkeɪʃn/",
+              "z": "教育；培养",
+              "rel": [
+                [
+                  "schooling",
+                  "学校教育"
+                ],
+                [
+                  "training",
+                  "培训"
+                ],
+                [
+                  "instruction",
+                  "指导"
+                ],
+                [
+                  "tuition",
+                  "学费；讲授"
+                ],
+                [
+                  "knowledge",
+                  "知识"
+                ],
+                [
+                  "learning",
+                  "学习"
+                ]
+              ],
+              "s": [
+                [
+                  "schooling",
+                  "学校教育"
+                ],
+                [
+                  "instruction",
+                  "指导"
+                ]
+              ],
+              "a": [
+                [
+                  "ignorance",
+                  "无知"
+                ]
+              ],
+              "e": [
+                "Education should be available to everyone.",
+                "人人都应享有教育。"
+              ]
+            },
+            {
+              "w": "development",
+              "p": "/dɪˈveləpmənt/",
+              "z": "发展；开发；成长",
+              "rel": [
+                [
+                  "growth",
+                  "增长"
+                ],
+                [
+                  "progress",
+                  "进步"
+                ],
+                [
+                  "expansion",
+                  "扩张"
+                ],
+                [
+                  "evolution",
+                  "演变"
+                ],
+                [
+                  "advancement",
+                  "推进"
+                ],
+                [
+                  "improvement",
+                  "改进"
+                ]
+              ],
+              "s": [
+                [
+                  "growth",
+                  "增长"
+                ],
+                [
+                  "progress",
+                  "进步"
+                ]
+              ],
+              "a": [
+                [
+                  "decline",
+                  "衰退"
+                ]
+              ],
+              "e": [
+                "Rapid economic development has changed the city.",
+                "快速的经济发 展改变了这座城市。"
+              ]
+            },
+            {
+              "w": "research",
+              "p": "/rɪˈsɜːtʃ/",
+              "z": "研究；调查",
+              "rel": [
+                [
+                  "investigation",
+                  "调查"
+                ],
+                [
+                  "study",
+                  "研究"
+                ],
+                [
+                  "analysis",
+                  "分析"
+                ],
+                [
+                  "experiment",
+                  "实验"
+                ],
+                [
+                  "survey",
+                  "调查；民意测验"
+                ],
+                [
+                  "exploration",
+                  "探索"
+                ]
+              ],
+              "s": [
+                [
+                  "investigation",
+                  "调查"
+                ],
+                [
+                  "study",
+                  "研究"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "The research shows a clear link between sleep and memory.",
+                "研究表明睡眠与记忆之间有明显的联系。"
+              ]
+            },
+            {
+              "w": "responsibility",
+              "p": "/rɪˌspɒnsəˈbɪləti/",
+              "z": "责任；职责",
+              "rel": [
+                [
+                  "duty",
+                  "职责"
+                ],
+                [
+                  "obligation",
+                  "义务"
+                ],
+                [
+                  "burden",
+                  "负担"
+                ],
+                [
+                  "commitment",
+                  "承诺；责任"
+                ],
+                [
+                  "liability",
+                  "责任；负债"
+                ],
+                [
+                  "accountability",
+                  "问责"
+                ]
+              ],
+              "s": [
+                [
+                  "duty",
+                  "职责"
+                ],
+                [
+                  "obligation",
+                  "义务"
+                ]
+              ],
+              "a": [
+                [
+                  "irresponsibility",
+                  "不负责任"
+                ]
+              ],
+              "e": [
+                "Parents have a responsibility to keep children safe.",
+                "父母有责任保护孩子的安全。"
+              ]
+            },
+            {
+              "w": "influence",
+              "p": "/ˈɪnfluəns/",
+              "z": "影响；影响力",
+              "rel": [
+                [
+                  "impact",
+                  "影响"
+                ],
+                [
+                  "effect",
+                  "效果；作用"
+                ],
+                [
+                  "power",
+                  "影响力"
+                ],
+                [
+                  "authority",
+                  "权威"
+                ],
+                [
+                  "weight",
+                  "分量"
+                ],
+                [
+                  "sway",
+                  "影响力；支配"
+                ]
+              ],
+              "s": [
+                [
+                  "impact",
+                  "影响"
+                ],
+                [
+                  "effect",
+                  "作用"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "Social media has a huge influence on young people.",
+                "社交媒体对年轻人有巨大的影响。"
+              ]
+            },
+            {
+              "w": "confidence",
+              "p": "/ˈkɒnfɪdəns/",
+              "z": "信心；信任",
+              "rel": [
+                [
+                  "faith",
+                  "信任"
+                ],
+                [
+                  "trust",
+                  "信赖"
+                ],
+                [
+                  "belief",
+                  "信念"
+                ],
+                [
+                  "assurance",
+                  "把握；保证"
+                ],
+                [
+                  "certainty",
+                  "确信"
+                ],
+                [
+                  "security",
+                  "安全感"
+                ]
+              ],
+              "s": [
+                [
+                  "faith",
+                  "信任"
+                ],
+                [
+                  "trust",
+                  "信赖"
+                ]
+              ],
+              "a": [
+                [
+                  "doubt",
+                  "怀疑"
+                ]
+              ],
+              "e": [
+                "Practice gives you confidence in public speaking.",
+                "练习让你在公开演讲时更有信心。"
+              ]
+            },
+            {
+              "w": "imagination",
+              "p": "/ɪˌmædʒɪˈneɪʃn/",
+              "z": "想象力；想象",
+              "rel": [
+                [
+                  "creativity",
+                  "创造力"
+                ],
+                [
+                  "fantasy",
+                  "幻想"
+                ],
+                [
+                  "vision",
+                  "想象力；远见"
+                ],
+                [
+                  "dream",
+                  "梦想"
+                ],
+                [
+                  "idea",
+                  "想法"
+                ],
+                [
+                  "inspiration",
+                  "灵感"
+                ]
+              ],
+              "s": [
+                [
+                  "creativity",
+                  "创造力"
+                ],
+                [
+                  "fantasy",
+                  "幻想"
+                ]
+              ],
+              "a": [
+                [
+                  "reality",
+                  "现实"
+                ]
+              ],
+              "e": [
+                "Children have wonderful imaginations.",
+                "孩子们有奇妙的想象力。"
+              ]
+            }
+          ],
+          "v": [
+            {
+              "w": "create",
+              "p": "/kriˈeɪt/",
+              "z": "创造；创作；造成",
+              "rel": [
+                [
+                  "produce",
+                  "生产"
+                ],
+                [
+                  "generate",
+                  "产生"
+                ],
+                [
+                  "invent",
+                  "发明"
+                ],
+                [
+                  "compose",
+                  "创作"
+                ],
+                [
+                  "fashion",
+                  "制作"
+                ],
+                [
+                  "originate",
+                  "起源"
+                ]
+              ],
+              "s": [
+                [
+                  "produce",
+                  "生产"
+                ],
+                [
+                  "generate",
+                  "产生"
+                ],
+                [
+                  "invent",
+                  "发明"
+                ]
+              ],
+              "a": [
+                [
+                  "destroy",
+                  "摧毁"
+                ]
+              ],
+              "e": [
+                "The project aims to create jobs for young people.",
+                "这个项目旨在为年轻人创造就业机会。"
+              ]
+            },
+            {
+              "w": "improve",
+              "p": "/ɪmˈpruːv/",
+              "z": "改善；提高",
+              "rel": [
+                [
+                  "enhance",
+                  "提升"
+                ],
+                [
+                  "upgrade",
+                  "升级"
+                ],
+                [
+                  "boost",
+                  "促进"
+                ],
+                [
+                  "refine",
+                  "改进；精炼"
+                ],
+                [
+                  "advance",
+                  "推进"
+                ],
+                [
+                  "optimize",
+                  "优化"
+                ]
+              ],
+              "s": [
+                [
+                  "enhance",
+                  "提升"
+                ],
+                [
+                  "upgrade",
+                  "升级"
+                ],
+                [
+                  "boost",
+                  "促进"
+                ]
+              ],
+              "a": [
+                [
+                  "worsen",
+                  "恶化"
+                ]
+              ],
+              "e": [
+                "Regular reading will improve your vocabulary.",
+                "经常阅读能提高你的词汇量。"
+              ]
+            },
+            {
+              "w": "achieve",
+              "p": "/əˈtʃiːv/",
+              "z": "实现；达到；取得",
+              "rel": [
+                [
+                  "accomplish",
+                  "完成"
+                ],
+                [
+                  "attain",
+                  "达成"
+                ],
+                [
+                  "realize",
+                  "实现"
+                ],
+                [
+                  "fulfill",
+                  "履行；实现"
+                ],
+                [
+                  "complete",
+                  "完成"
+                ],
+                [
+                  "win",
+                  "赢得"
+                ]
+              ],
+              "s": [
+                [
+                  "accomplish",
+                  "完成"
+                ],
+                [
+                  "attain",
+                  "达成"
+                ],
+                [
+                  "realize",
+                  "实现"
+                ]
+              ],
+              "a": [
+                [
+                  "fail",
+                  "失败"
+                ]
+              ],
+              "e": [
+                "You can achieve anything if you work hard.",
+                "只要努力，你就能实现任何目标。"
+              ]
+            },
+            {
+              "w": "encourage",
+              "p": "/ɪnˈkʌrɪdʒ/",
+              "z": "鼓励；激励",
+              "rel": [
+                [
+                  "inspire",
+                  "激励"
+                ],
+                [
+                  "motivate",
+                  "激发"
+                ],
+                [
+                  "support",
+                  "支持"
+                ],
+                [
+                  "cheer",
+                  "鼓舞"
+                ],
+                [
+                  "urge",
+                  "敦促"
+                ],
+                [
+                  "boost",
+                  "激励"
+                ]
+              ],
+              "s": [
+                [
+                  "inspire",
+                  "激励"
+                ],
+                [
+                  "motivate",
+                  "激发"
+                ],
+                [
+                  "support",
+                  "支持"
+                ]
+              ],
+              "a": [
+                [
+                  "discourage",
+                  "使气馁"
+                ]
+              ],
+              "e": [
+                "Teachers should encourage students to ask questions.",
+                "老师应该鼓励学生提问。"
+              ]
+            },
+            {
+              "w": "develop",
+              "p": "/dɪˈveləp/",
+              "z": "发展；开发；成长",
+              "rel": [
+                [
+                  "grow",
+                  "成长"
+                ],
+                [
+                  "expand",
+                  "扩展"
+                ],
+                [
+                  "advance",
+                  "推进"
+                ],
+                [
+                  "evolve",
+                  "演变"
+                ],
+                [
+                  "progress",
+                  "前进"
+                ],
+                [
+                  "flourish",
+                  "繁荣"
+                ]
+              ],
+              "s": [
+                [
+                  "grow",
+                  "成长"
+                ],
+                [
+                  "expand",
+                  "扩展"
+                ],
+                [
+                  "advance",
+                  "推进"
+                ]
+              ],
+              "a": [
+                [
+                  "decline",
+                  "衰退"
+                ]
+              ],
+              "e": [
+                "Reading helps children develop language skills.",
+                "阅读帮助儿童发展语言能力。"
+              ]
+            },
+            {
+              "w": "recognize",
+              "p": "/ˈrekəɡnaɪz/",
+              "z": "认出；认可；识别",
+              "rel": [
+                [
+                  "identify",
+                  "识别"
+                ],
+                [
+                  "acknowledge",
+                  "承认"
+                ],
+                [
+                  "admit",
+                  "承认"
+                ],
+                [
+                  "detect",
+                  "察觉"
+                ],
+                [
+                  "notice",
+                  "注意到"
+                ],
+                [
+                  "distinguish",
+                  "辨别"
+                ]
+              ],
+              "s": [
+                [
+                  "identify",
+                  "识别"
+                ],
+                [
+                  "acknowledge",
+                  "承认"
+                ],
+                [
+                  "admit",
+                  "承认"
+                ]
+              ],
+              "a": [
+                [
+                  "ignore",
+                  "忽视"
+                ]
+              ],
+              "e": [
+                "I didn't recognize him with a beard.",
+                "他留了胡子，我没认出来。"
+              ]
+            },
+            {
+              "w": "produce",
+              "p": "/prəˈdjuːs/",
+              "z": "生产；产生；出示",
+              "rel": [
+                [
+                  "make",
+                  "制造"
+                ],
+                [
+                  "manufacture",
+                  "制造"
+                ],
+                [
+                  "create",
+                  "创造"
+                ],
+                [
+                  "generate",
+                  "产生"
+                ],
+                [
+                  "yield",
+                  "产出"
+                ],
+                [
+                  "build",
+                  "建造"
+                ]
+              ],
+              "s": [
+                [
+                  "make",
+                  "制造"
+                ],
+                [
+                  "manufacture",
+                  "制造"
+                ],
+                [
+                  "create",
+                  "创造"
+                ]
+              ],
+              "a": [
+                [
+                  "consume",
+                  "消耗"
+                ]
+              ],
+              "e": [
+                "The factory produces thousands of cars each year.",
+                "这家工厂每年生产数千辆汽车。"
+              ]
+            },
+            {
+              "w": "attract",
+              "p": "/əˈtrækt/",
+              "z": "吸引；引起",
+              "rel": [
+                [
+                  "appeal",
+                  "吸引"
+                ],
+                [
+                  "fascinate",
+                  "使着迷"
+                ],
+                [
+                  "draw",
+                  "吸引"
+                ],
+                [
+                  "charm",
+                  "迷住"
+                ],
+                [
+                  "lure",
+                  "引诱"
+                ],
+                [
+                  "tempt",
+                  "诱惑"
+                ]
+              ],
+              "s": [
+                [
+                  "appeal",
+                  "吸引"
+                ],
+                [
+                  "fascinate",
+                  "使着迷"
+                ],
+                [
+                  "draw",
+                  "吸引"
+                ]
+              ],
+              "a": [
+                [
+                  "repel",
+                  "排斥"
+                ]
+              ],
+              "e": [
+                "The exhibition attracted millions of visitors.",
+                "这场展览吸引了数百万游客。"
+              ]
+            },
+            {
+              "w": "guarantee",
+              "p": "/ˌɡærənˈtiː/",
+              "z": "保证；担保；保修",
+              "rel": [
+                [
+                  "ensure",
+                  "确保"
+                ],
+                [
+                  "assure",
+                  "向…保证"
+                ],
+                [
+                  "promise",
+                  "承诺"
+                ],
+                [
+                  "pledge",
+                  "发誓；保证"
+                ],
+                [
+                  "secure",
+                  "确保"
+                ],
+                [
+                  "warrant",
+                  "担保"
+                ]
+              ],
+              "s": [
+                [
+                  "ensure",
+                  "确保"
+                ],
+                [
+                  "assure",
+                  "向…保证"
+                ],
+                [
+                  "promise",
+                  "承诺"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "Hard work does not guarantee success.",
+                "努力工作并不能保证成功。"
+              ]
+            },
+            {
+              "w": "observe",
+              "p": "/əbˈzɜːv/",
+              "z": "观察；遵守；注意到",
+              "rel": [
+                [
+                  "watch",
+                  "注视"
+                ],
+                [
+                  "notice",
+                  "注意到"
+                ],
+                [
+                  "study",
+                  "研究"
+                ],
+                [
+                  "monitor",
+                  "监测"
+                ],
+                [
+                  "examine",
+                  "检查"
+                ],
+                [
+                  "inspect",
+                  "检查"
+                ]
+              ],
+              "s": [
+                [
+                  "watch",
+                  "注视"
+                ],
+                [
+                  "notice",
+                  "注意到"
+                ],
+                [
+                  "study",
+                  "研究"
+                ]
+              ],
+              "a": [
+                [
+                  "ignore",
+                  "忽视"
+                ]
+              ],
+              "e": [
+                "Scientists observe the stars through telescopes.",
+                "科学家用望远镜观察星星。"
+              ]
+            },
+            {
+              "w": "participate",
+              "p": "/pɑːˈtɪsɪpeɪt/",
+              "z": "参加；参与",
+              "rel": [
+                [
+                  "join",
+                  "加入"
+                ],
+                [
+                  "engage",
+                  "参与"
+                ],
+                [
+                  "involve",
+                  "使参与"
+                ],
+                [
+                  "share",
+                  "分享；参与"
+                ],
+                [
+                  "attend",
+                  "出席"
+                ],
+                [
+                  "cooperate",
+                  "合作"
+                ]
+              ],
+              "s": [
+                [
+                  "join",
+                  "加入"
+                ],
+                [
+                  "engage",
+                  "参与"
+                ],
+                [
+                  "take part",
+                  "参加"
+                ]
+              ],
+              "a": [
+                [
+                  "withdraw",
+                  "退出"
+                ]
+              ],
+              "e": [
+                "All students are encouraged to participate in class.",
+                "鼓励所有学生参与课堂活动。"
+              ]
+            },
+            {
+              "w": "protect",
+              "p": "/prəˈtekt/",
+              "z": "保护；防护",
+              "rel": [
+                [
+                  "guard",
+                  "守卫"
+                ],
+                [
+                  "defend",
+                  "防御"
+                ],
+                [
+                  "shelter",
+                  "庇护"
+                ],
+                [
+                  "shield",
+                  "保护"
+                ],
+                [
+                  "preserve",
+                  "保护；保存"
+                ],
+                [
+                  "secure",
+                  "保护"
+                ]
+              ],
+              "s": [
+                [
+                  "guard",
+                  "守卫"
+                ],
+                [
+                  "defend",
+                  "防御"
+                ],
+                [
+                  "shelter",
+                  "庇护"
+                ]
+              ],
+              "a": [
+                [
+                  "attack",
+                  "攻击"
+                ]
+              ],
+              "e": [
+                "We should protect endangered animals.",
+                "我们应该保护濒危动物。"
+              ]
+            },
+            {
+              "w": "communicate",
+              "p": "/kəˈmjuːnɪkeɪt/",
+              "z": "交流；传达；沟通",
+              "rel": [
+                [
+                  "converse",
+                  "交谈"
+                ],
+                [
+                  "interact",
+                  "互动"
+                ],
+                [
+                  "talk",
+                  "交谈"
+                ],
+                [
+                  "chat",
+                  "聊天"
+                ],
+                [
+                  "express",
+                  "表达"
+                ],
+                [
+                  "convey",
+                  "传达"
+                ]
+              ],
+              "s": [
+                [
+                  "converse",
+                  "交谈"
+                ],
+                [
+                  "interact",
+                  "互动"
+                ],
+                [
+                  "talk",
+                  "交谈"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "Good teams communicate openly with each other.",
+                "优秀的团队会坦诚沟通。"
+              ]
+            },
+            {
+              "w": "discover",
+              "p": "/dɪˈskʌvə(r)/",
+              "z": "发现；发觉",
+              "rel": [
+                [
+                  "find",
+                  "找到"
+                ],
+                [
+                  "detect",
+                  "察觉"
+                ],
+                [
+                  "reveal",
+                  "揭示"
+                ],
+                [
+                  "uncover",
+                  "揭开"
+                ],
+                [
+                  "explore",
+                  "探索"
+                ],
+                [
+                  "locate",
+                  "找到；定位"
+                ]
+              ],
+              "s": [
+                [
+                  "find",
+                  "找到"
+                ],
+                [
+                  "detect",
+                  "察觉"
+                ],
+                [
+                  "reveal",
+                  "揭示"
+                ]
+              ],
+              "a": [
+                [
+                  "conceal",
+                  "隐藏"
+                ]
+              ],
+              "e": [
+                "Scientists discovered a new species of frog.",
+                "科学家发现了一种新的蛙类。"
+              ]
+            },
+            {
+              "w": "succeed",
+              "p": "/səkˈsiːd/",
+              "z": "成功；继承",
+              "rel": [
+                [
+                  "thrive",
+                  "兴旺"
+                ],
+                [
+                  "prosper",
+                  "繁荣"
+                ],
+                [
+                  "triumph",
+                  "获胜"
+                ],
+                [
+                  "win",
+                  "获胜"
+                ],
+                [
+                  "achieve",
+                  "实现"
+                ],
+                [
+                  "flourish",
+                  "繁荣"
+                ]
+              ],
+              "s": [
+                [
+                  "thrive",
+                  "兴旺"
+                ],
+                [
+                  "prosper",
+                  "繁荣"
+                ],
+                [
+                  "triumph",
+                  "获胜"
+                ]
+              ],
+              "a": [
+                [
+                  "fail",
+                  "失败"
+                ]
+              ],
+              "e": [
+                "She succeeded in passing the exam.",
+                "她成功通过了考试。"
+              ]
+            }
+          ],
+          "a": [
+            {
+              "w": "creative",
+              "p": "/kriˈeɪtɪv/",
+              "z": "有创造力的；独创的",
+              "rel": [
+                [
+                  "inventive",
+                  "善于发明的"
+                ],
+                [
+                  "imaginative",
+                  "富有想象力的"
+                ],
+                [
+                  "original",
+                  "独创的"
+                ],
+                [
+                  "innovative",
+                  "创新的"
+                ],
+                [
+                  "ingenious",
+                  "巧妙的"
+                ],
+                [
+                  "novel",
+                  "新颖的"
+                ]
+              ],
+              "s": [
+                [
+                  "inventive",
+                  "善于发明的"
+                ],
+                [
+                  "imaginative",
+                  "富有想象力的"
+                ],
+                [
+                  "original",
+                  "独创的"
+                ]
+              ],
+              "a": [
+                [
+                  "unimaginative",
+                  "缺乏想象力的"
+                ]
+              ],
+              "e": [
+                "She found a creative solution to the problem.",
+                "她找到了一个有创意的解决办法。"
+              ]
+            },
+            {
+              "w": "confident",
+              "p": "/ˈkɒnfɪdənt/",
+              "z": "自信的；确信的",
+              "rel": [
+                [
+                  "assured",
+                  "自信的"
+                ],
+                [
+                  "certain",
+                  "确信的"
+                ],
+                [
+                  "sure",
+                  "确信的"
+                ],
+                [
+                  "positive",
+                  "有把握的"
+                ],
+                [
+                  "assertive",
+                  "坚定自信的"
+                ],
+                [
+                  "secure",
+                  "有把握的"
+                ]
+              ],
+              "s": [
+                [
+                  "assured",
+                  "自信的"
+                ],
+                [
+                  "self-assured",
+                  "有信心的"
+                ],
+                [
+                  "certain",
+                  "确信的"
+                ]
+              ],
+              "a": [
+                [
+                  "insecure",
+                  "缺乏信心的"
+                ]
+              ],
+              "e": [
+                "Be confident in your ability to succeed.",
+                "对你自己能成功的能力要有信心。"
+              ]
+            },
+            {
+              "w": "independent",
+              "p": "/ˌɪndɪˈpendənt/",
+              "z": "独立的；自主的",
+              "rel": [
+                [
+                  "self-reliant",
+                  "自立的"
+                ],
+                [
+                  "autonomous",
+                  "自主的"
+                ],
+                [
+                  "free",
+                  "自由的"
+                ],
+                [
+                  "self-sufficient",
+                  "自给自足的"
+                ],
+                [
+                  "separate",
+                  "独立的"
+                ],
+                [
+                  "self-governing",
+                  "自治的"
+                ]
+              ],
+              "s": [
+                [
+                  "self-reliant",
+                  "自立的"
+                ],
+                [
+                  "autonomous",
+                  "自主的"
+                ],
+                [
+                  "free",
+                  "自由的"
+                ]
+              ],
+              "a": [
+                [
+                  "dependent",
+                  "依赖的"
+                ]
+              ],
+              "e": [
+                "She is an independent and determined woman.",
+                "她是一位独立而坚定的女性。"
+              ]
+            },
+            {
+              "w": "significant",
+              "p": "/sɪɡˈnɪfɪkənt/",
+              "z": "重要的；显著的",
+              "rel": [
+                [
+                  "important",
+                  "重要的"
+                ],
+                [
+                  "notable",
+                  "值得注意的"
+                ],
+                [
+                  "considerable",
+                  "相当大的"
+                ],
+                [
+                  "substantial",
+                  "大量的"
+                ],
+                [
+                  "major",
+                  "重大的"
+                ],
+                [
+                  "marked",
+                  "显著的"
+                ]
+              ],
+              "s": [
+                [
+                  "important",
+                  "重要的"
+                ],
+                [
+                  "notable",
+                  "值得注意的"
+                ],
+                [
+                  "considerable",
+                  "相当大的"
+                ]
+              ],
+              "a": [
+                [
+                  "insignificant",
+                  "微不足道的"
+                ]
+              ],
+              "e": [
+                "The internet has had a significant impact on education.",
+                "互联网对教育产生了重大影响。"
+              ]
+            },
+            {
+              "w": "sustainable",
+              "p": "/səˈsteɪnəbl/",
+              "z": "可持续的；能维持的",
+              "rel": [
+                [
+                  "renewable",
+                  "可再生的"
+                ],
+                [
+                  "viable",
+                  "可行的"
+                ],
+                [
+                  "durable",
+                  "持久的"
+                ],
+                [
+                  "stable",
+                  "稳定的"
+                ],
+                [
+                  "lasting",
+                  "持久的"
+                ],
+                [
+                  "green",
+                  "环保的"
+                ]
+              ],
+              "s": [
+                [
+                  "renewable",
+                  "可再生的"
+                ],
+                [
+                  "viable",
+                  "可行的"
+                ],
+                [
+                  "durable",
+                  "持久的"
+                ]
+              ],
+              "a": [
+                [
+                  "unsustainable",
+                  "不可持续的"
+                ]
+              ],
+              "e": [
+                "We need sustainable energy sources for the future.",
+                "未来我们需要可持续的能源。"
+              ]
+            },
+            {
+              "w": "reliable",
+              "p": "/rɪˈlaɪəbl/",
+              "z": "可靠的；可信赖的",
+              "rel": [
+                [
+                  "dependable",
+                  "可靠的"
+                ],
+                [
+                  "trustworthy",
+                  "值得信赖的"
+                ],
+                [
+                  "solid",
+                  "可靠的"
+                ],
+                [
+                  "steady",
+                  "稳定的"
+                ],
+                [
+                  "faithful",
+                  "忠实的"
+                ],
+                [
+                  "consistent",
+                  "始终如一的"
+                ]
+              ],
+              "s": [
+                [
+                  "dependable",
+                  "可靠的"
+                ],
+                [
+                  "trustworthy",
+                  "值得信赖的"
+                ],
+                [
+                  "solid",
+                  "可靠的"
+                ]
+              ],
+              "a": [
+                [
+                  "unreliable",
+                  "不可靠的"
+                ]
+              ],
+              "e": [
+                "He is a reliable friend who keeps his promises.",
+                "他是位信守承诺的可靠朋友。"
+              ]
+            },
+            {
+              "w": "competitive",
+              "p": "/kəmˈpetətɪv/",
+              "z": "竞争的；有竞争力的",
+              "rel": [
+                [
+                  "rival",
+                  "竞争的"
+                ],
+                [
+                  "ambitious",
+                  "有雄心的"
+                ],
+                [
+                  "aggressive",
+                  "好斗的"
+                ],
+                [
+                  "keen",
+                  "激烈的"
+                ],
+                [
+                  "fierce",
+                  "激烈的"
+                ],
+                [
+                  "intense",
+                  "激烈的"
+                ]
+              ],
+              "s": [
+                [
+                  "rival",
+                  "竞争的"
+                ],
+                [
+                  "ambitious",
+                  "有雄心的"
+                ],
+                [
+                  "aggressive",
+                  "好斗的"
+                ]
+              ],
+              "a": [
+                [
+                  "cooperative",
+                  "合作的"
+                ]
+              ],
+              "e": [
+                "The hotel industry is highly competitive.",
+                "酒店业竞争非常激烈。"
+              ]
+            },
+            {
+              "w": "flexible",
+              "p": "/ˈfleksəbl/",
+              "z": "灵活的；柔韧的",
+              "rel": [
+                [
+                  "adaptable",
+                  "适应性强的"
+                ],
+                [
+                  "adjustable",
+                  "可调节的"
+                ],
+                [
+                  "elastic",
+                  "有弹性的"
+                ],
+                [
+                  "versatile",
+                  "多才多艺的"
+                ],
+                [
+                  "agile",
+                  "敏捷的"
+                ],
+                [
+                  "supple",
+                  "柔韧的"
+                ]
+              ],
+              "s": [
+                [
+                  "adaptable",
+                  "适应性强的"
+                ],
+                [
+                  "adjustable",
+                  "可调节的"
+                ],
+                [
+                  "elastic",
+                  "有弹性的"
+                ]
+              ],
+              "a": [
+                [
+                  "rigid",
+                  "僵硬的"
+                ]
+              ],
+              "e": [
+                "My working hours are flexible.",
+                "我的工作时间很灵活。"
+              ]
+            },
+            {
+              "w": "environmental",
+              "p": "/ɪnˌvaɪrənˈmentl/",
+              "z": "环境的；环保的",
+              "rel": [
+                [
+                  "ecological",
+                  "生态的"
+                ],
+                [
+                  "natural",
+                  "自然的"
+                ],
+                [
+                  "green",
+                  "环保的"
+                ],
+                [
+                  "climatic",
+                  "气候的"
+                ],
+                [
+                  "sustainable",
+                  "可持续的"
+                ],
+                [
+                  "biological",
+                  "生物的"
+                ]
+              ],
+              "s": [
+                [
+                  "ecological",
+                  "生态的"
+                ]
+              ],
+              "a": [],
+              "e": [
+                "The company follows strict environmental standards.",
+                "这家公司遵循严格的环境标准。"
+              ]
+            },
+            {
+              "w": "affordable",
+              "p": "/əˈfɔːdəbl/",
+              "z": "负担得起的；便宜的",
+              "rel": [
+                [
+                  "cheap",
+                  "便宜的"
+                ],
+                [
+                  "economical",
+                  "经济的"
+                ],
+                [
+                  "inexpensive",
+                  "不贵的"
+                ],
+                [
+                  "reasonable",
+                  "价格合理的"
+                ],
+                [
+                  "budget",
+                  "廉价的"
+                ],
+                [
+                  "low-cost",
+                  "低成本的"
+                ]
+              ],
+              "s": [
+                [
+                  "cheap",
+                  "便宜的"
+                ],
+                [
+                  "economical",
+                  "经济的"
+                ],
+                [
+                  "inexpensive",
+                  "不贵的"
+                ]
+              ],
+              "a": [
+                [
+                  "expensive",
+                  "昂贵的"
+                ]
+              ],
+              "e": [
+                "The city needs more affordable housing.",
+                "这座城市需要更多价格可负担的住房。"
+              ]
+            },
+            {
+              "w": "global",
+              "p": "/ˈɡləʊbl/",
+              "z": "全球的；全面的",
+              "rel": [
+                [
+                  "worldwide",
+                  "全世界的"
+                ],
+                [
+                  "international",
+                  "国际的"
+                ],
+                [
+                  "universal",
+                  "普遍的"
+                ],
+                [
+                  "planetary",
+                  "行星的"
+                ],
+                [
+                  "comprehensive",
+                  "全面的"
+                ],
+                [
+                  "sweeping",
+                  "全面的"
+                ]
+              ],
+              "s": [
+                [
+                  "worldwide",
+                  "全世界的"
+                ],
+                [
+                  "international",
+                  "国际的"
+                ],
+                [
+                  "universal",
+                  "普遍的"
+                ]
+              ],
+              "a": [
+                [
+                  "local",
+                  "本地的"
+                ]
+              ],
+              "e": [
+                "Climate change is a global challenge.",
+                "气候变化是全球性的挑战。"
+              ]
+            },
+            {
+              "w": "genuine",
+              "p": "/ˈdʒenjuɪn/",
+              "z": "真正的；真诚的",
+              "rel": [
+                [
+                  "authentic",
+                  "真实的"
+                ],
+                [
+                  "sincere",
+                  "真诚的"
+                ],
+                [
+                  "real",
+                  "真正的"
+                ],
+                [
+                  "true",
+                  "真实的"
+                ],
+                [
+                  "honest",
+                  "诚实的"
+                ],
+                [
+                  "heartfelt",
+                  "由衷的"
+                ]
+              ],
+              "s": [
+                [
+                  "authentic",
+                  "真实的"
+                ],
+                [
+                  "sincere",
+                  "真诚的"
+                ],
+                [
+                  "real",
+                  "真正的"
+                ]
+              ],
+              "a": [
+                [
+                  "fake",
+                  "假的"
+                ],
+                [
+                  "artificial",
+                  "人造的"
+                ]
+              ],
+              "e": [
+                "She showed genuine concern for her students.",
+                "她对学生们表现出真诚的关心。"
+              ]
+            },
+            {
+              "w": "valuable",
+              "p": "/ˈvæljuəbl/",
+              "z": "有价值的；宝贵的",
+              "rel": [
+                [
+                  "precious",
+                  "珍贵的"
+                ],
+                [
+                  "useful",
+                  "有用的"
+                ],
+                [
+                  "worthwhile",
+                  "值得的"
+                ],
+                [
+                  "priceless",
+                  "无价的"
+                ],
+                [
+                  "invaluable",
+                  "无价的"
+                ],
+                [
+                  "beneficial",
+                  "有益的"
+                ]
+              ],
+              "s": [
+                [
+                  "precious",
+                  "珍贵的"
+                ],
+                [
+                  "useful",
+                  "有用的"
+                ],
+                [
+                  "worthwhile",
+                  "值得的"
+                ]
+              ],
+              "a": [
+                [
+                  "worthless",
+                  "毫无价值的"
+                ]
+              ],
+              "e": [
+                "The internship was a valuable experience.",
+                "这次实习是一次宝贵的经历。"
+              ]
+            },
+            {
+              "w": "efficient",
+              "p": "/ɪˈfɪʃnt/",
+              "z": "高效的；效率高的",
+              "rel": [
+                [
+                  "effective",
+                  "有效的"
+                ],
+                [
+                  "productive",
+                  "多产的"
+                ],
+                [
+                  "streamlined",
+                  "精简的"
+                ],
+                [
+                  "economical",
+                  "节约的"
+                ],
+                [
+                  "competent",
+                  "有能力的"
+                ],
+                [
+                  "capable",
+                  "能干的"
+                ]
+              ],
+              "s": [
+                [
+                  "effective",
+                  "有效的"
+                ],
+                [
+                  "productive",
+                  "多产的"
+                ],
+                [
+                  "streamlined",
+                  "精简的"
+                ]
+              ],
+              "a": [
+                [
+                  "inefficient",
+                  "低效的"
+                ]
+              ],
+              "e": [
+                "The new system is more efficient than the old one.",
+                "新系统比旧系统更高效。"
+              ]
+            },
+            {
+              "w": "diverse",
+              "p": "/daɪˈvɜːs/",
+              "z": "多样的；不同的",
+              "rel": [
+                [
+                  "varied",
+                  "多样的"
+                ],
+                [
+                  "various",
+                  "各种各样的"
+                ],
+                [
+                  "mixed",
+                  "混合的"
+                ],
+                [
+                  "assorted",
+                  "各式各样的"
+                ],
+                [
+                  "different",
+                  "不同的"
+                ],
+                [
+                  "multiple",
+                  "多种的"
+                ]
+              ],
+              "s": [
+                [
+                  "varied",
+                  "多样的"
+                ],
+                [
+                  "various",
+                  "各种各样的"
+                ],
+                [
+                  "mixed",
+                  "混合的"
+                ]
+              ],
+              "a": [
+                [
+                  "uniform",
+                  "单一的"
+                ],
+                [
+                  "identical",
+                  "相同的"
+                ]
+              ],
+              "e": [
+                "The city has a diverse population.",
+                "这座城市人口多元。"
+              ]
+            }
+          ]
+        }
+
+        // ================================================
+        // 日期与选词逻辑
+        // 词性轮换：名词 → 动词 → 形容词（按天循环）
+        // 同一天在世界各地看到的词一致
+        // ================================================
+        const MS_DAY = 86400000;
+        const POS_ORDER = ['n', 'v', 'a'];
+        const POS_LABEL = { n: '名词 · NOUN', v: '动词 · VERB', a: '形容词 · ADJ' };
+        const POS_CN = { n: '名词', v: '动词', a: '形容词' };
+        const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+        function pad2(x) { return String(x).padStart(2, '0'); }
+        function dateKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+        function dayNumber(d) { return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / MS_DAY); }
+        function shiftDay(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+
+        let viewOffset = 0; // 相对今天偏移（天）
+
+        function wordForOffset(offset) {
+            const d = shiftDay(new Date(), offset);
+            const dn = dayNumber(d);
+            const pos = POS_ORDER[((dn % 3) + 3) % 3];
+            const idx = Math.floor(Math.max(dn, 0) / 3) % SEEDS[pos].length;
+            return { seed: SEEDS[pos][idx], pos: pos, date: d };
+        }
+
+        // ================================================
+        // 打卡 / 连续天数
+        // ================================================
+        const STORE_KEY = 'daily-word-progress-v1';
+
+        function loadLog() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(STORE_KEY));
+                if (raw && typeof raw === 'object' && raw.m) return raw;
+            } catch (e) { /* ignore */ }
+            return { m: {} };
+        }
+
+        function saveLog(log) {
+            try { localStorage.setItem(STORE_KEY, JSON.stringify(log)); } catch (e) { /* ignore */ }
+        }
+
+        function computeStreak(log) {
+            let n = 0;
+            let d = new Date();
+            // 今天尚未打卡时，连续天数从昨天往前累加，避免白天打开就显示 0 天
+            if (!log.m[dateKey(d)]) d = shiftDay(d, -1);
+            while (log.m[dateKey(d)]) { n++; d = shiftDay(d, -1); }
+            return n;
+        }
+
+        function totalCheckins(log) {
+            return Object.keys(log.m).length;
+        }
+
+        // ================================================
+        // 发音
+        // ================================================
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'en-US';
+            u.rate = 0.85;
+            speechSynthesis.speak(u);
+        }
+
+        // ================================================
+        // DOM
+        // ================================================
+        const $ = (id) => document.getElementById(id);
+        const el = {
+            dateText: $('dateText'), dateSub: $('dateSub'),
+            rotateBar: $('rotateBar'), segs: [].slice.call($('rotateBar').children),
+            posBadge: $('posBadge'), wordText: $('wordText'),
+            phoneticBtn: $('phoneticBtn'), phoneticText: $('phoneticText'),
+            zhText: $('zhText'),
+            dailyCard: $('dailyCard'),
+            checkinBtn: $('checkinBtn'), checkinText: $('checkinText'),
+            prevDay: $('prevDay'), nextDay: $('nextDay'), todayBtn: $('todayBtn'),
+            streakText: $('streakText'), streakPill: $('streakPill'),
+            mapWrap: $('mapWrap'), synChips: $('synChips'), antChips: $('antChips'),
+            exEn: $('exEn'), exZh: $('exZh'), exSay: $('exSay')
+        };
+
+        let current = null; // { seed, pos, date }
+
+        // ================================================
+        // 渲染：思维导图
+        // ================================================
+        function mkNode(word, zh, posLabel, isCenter) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'mnode' + (isCenter ? ' center' : ' fade-in');
+            b.dataset.word = word;
+            const wSpan = document.createElement('span');
+            wSpan.className = 'mword';
+            wSpan.textContent = word;
+            const zhSpan = document.createElement('span');
+            zhSpan.className = 'mzh';
+            zhSpan.textContent = zh || '';
+            b.appendChild(wSpan);
+            if (zh) b.appendChild(zhSpan);
+            if (posLabel) {
+                const p = document.createElement('span');
+                p.className = 'mp';
+                p.textContent = posLabel;
+                b.appendChild(p);
+            }
+            if (isCenter) {
+                b.style.setProperty('--mp', posColor(current.pos));
+            }
+            return b;
+        }
+
+        function layoutMindMap() {
+            const seed = current.seed;
+            const fam = seed.rel || [];
+            const n = fam.length;
+            const wrap = el.mapWrap;
+            const w = wrap.clientWidth || 340;
+            const idealH = n <= 4 ? 300 : 300 + (n - 4) * 24;
+            const h = Math.min(Math.max(idealH, 290), 450);
+            wrap.style.height = h + 'px';
+            wrap.innerHTML = '';
+
+            const cx = w / 2, cy = h / 2;
+            const nodeW = n <= 5 ? 118 : 104;
+            const nodeH = n <= 5 ? 50 : 46;
+            const r = Math.max(66, Math.min(w / 2 - nodeW / 2 - 14, h / 2 - nodeH / 2 - 14, 145));
+
+            // 连线
+            const NS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(NS, 'svg');
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
+            svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+            svg.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < n; i++) {
+                const ang = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+                const x = cx + r * Math.cos(ang);
+                const y = cy + r * Math.sin(ang);
+                const line = document.createElementNS(NS, 'line');
+                line.setAttribute('x1', cx);
+                line.setAttribute('y1', cy);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--md-outline-variant').trim());
+                line.setAttribute('stroke-width', '1.5');
+                svg.appendChild(line);
+            }
+            wrap.appendChild(svg);
+
+            // 中心词
+            const posShort = POS_LABEL[current.pos].split(' ')[0];
+            const center = mkNode(seed.w, seed.z, posShort, true);
+            center.setAttribute('aria-label', '今日词 ' + seed.w + '，' + seed.z + '，播放发音');
+            center.style.left = cx + 'px';
+            center.style.top = cy + 'px';
+            center.addEventListener('click', () => {
+                speak(seed.w);
+                flashNode(center);
+                flashCard();
+            });
+            wrap.appendChild(center);
+
+            // 发散节点
+            fam.forEach((item, i) => {
+                const ang = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+                const x = cx + r * Math.cos(ang);
+                const y = cy + r * Math.sin(ang);
+                const node = mkNode(item[0], item[1], null, false);
+                node.setAttribute('aria-label', item[0] + '，' + item[1] + '，播放发音');
+                node.style.animationDelay = (0.05 * (i + 1)) + 's';
+                node.style.left = x + 'px';
+                node.style.top = y + 'px';
+                node.addEventListener('click', () => {
+                    speak(item[0]);
+                    flashNode(node);
+                });
+                wrap.appendChild(node);
+            });
+        }
+
+        function flashNode(node) {
+            node.classList.remove('speaking');
+            void node.offsetWidth;
+            node.classList.add('speaking');
+            setTimeout(() => node.classList.remove('speaking'), 600);
+        }
+
+        function flashCard() {
+            el.dailyCard.classList.remove('daily--speaking');
+            void el.dailyCard.offsetWidth;
+            el.dailyCard.classList.add('daily--speaking');
+            setTimeout(() => el.dailyCard.classList.remove('daily--speaking'), 600);
+        }
+
+        // ================================================
+        // 渲染：整页
+        // ================================================
+        function renderChips(container, list, emptyText) {
+            container.innerHTML = '';
+            if (!list || list.length === 0) {
+                const p = document.createElement('span');
+                p.className = 'empty';
+                p.textContent = emptyText;
+                container.appendChild(p);
+                return;
+            }
+            list.forEach((item) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.innerHTML = '';
+                b.appendChild(document.createTextNode(item[0]));
+                const s = document.createElement('small');
+                s.textContent = item[1];
+                b.appendChild(s);
+                b.setAttribute('aria-label', item[0] + '，' + item[1] + '，播放发音');
+                b.addEventListener('click', () => speak(item[0]));
+                container.appendChild(b);
+            });
+        }
+
+        function renderAll() {
+            current = wordForOffset(viewOffset);
+            const { seed, pos, date } = current;
+            const log = loadLog();
+            const key = dateKey(date);
+            const isToday = viewOffset === 0;
+
+            // 日期栏
+            el.dateText.textContent = (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + WEEK[date.getDay()];
+            el.dateSub.textContent = isToday ? '今天 · 词性轮换 名词 → 动词 → 形容词'
+                : (viewOffset < 0 ? '正在回顾 ' + Math.abs(viewOffset) + ' 天前' : '正在预览 ' + viewOffset + ' 天后');
+            el.segs.forEach(seg => {
+                seg.classList.toggle('active', seg.dataset.pos === pos);
+                seg.style.background = seg.dataset.pos === pos ? posColor(pos) : '';
+            });
+
+            // 词卡
+            el.posBadge.textContent = POS_LABEL[pos];
+            el.posBadge.style.background = posColorBg(pos);
+            el.posBadge.style.color = posColorDark(pos);
+            el.wordText.textContent = seed.w;
+            el.phoneticText.textContent = seed.p;
+            el.zhText.textContent = seed.z;
+
+            // 同词性发散词
+            layoutMindMap();
+
+            // 同义 / 反义
+            renderChips(el.synChips, seed.s, '暂无');
+            renderChips(el.antChips, seed.a, '暂无');
+
+            // 例句
+            el.exEn.textContent = seed.e[0];
+            el.exZh.textContent = seed.e[1];
+
+            // 打卡
+            updateCheckin(log, key);
+
+            // 打卡统计
+            el.streakText.textContent = computeStreak(log) + ' 天';
+            el.todayBtn.textContent = isToday ? '今天' : '回到今天';
+
+            // 动效重放
+            const riseEls = document.querySelectorAll('.rise');
+            riseEls.forEach((n) => {
+                n.classList.remove('rise');
+                void n.offsetWidth;
+                n.classList.add('rise');
+            });
+        }
+
+        function posColor(pos) {
+            return getComputedStyle(document.documentElement).getPropertyValue('--pos-' + pos).trim();
+        }
+        function posColorBg(pos) {
+            return getComputedStyle(document.documentElement).getPropertyValue('--pos-' + pos + '-bg').trim();
+        }
+        function posColorDark(pos) {
+            return pos === 'n' ? '#21005D' : (pos === 'v' ? '#003446' : '#3E2700');
+        }
+
+        function updateCheckin(log, key) {
+            const done = !!log.m[key];
+            el.checkinBtn.classList.toggle('done', done);
+            const total = totalCheckins(log);
+            el.checkinText.textContent = done
+                ? '✓ 已打卡 · 累计 ' + total + ' 天'
+                : '打卡学习 · 累计 ' + total + ' 天';
+        }
+
+        // ================================================
+        // 交互
+        // ================================================
+        function toggleCheckin() {
+            const log = loadLog();
+            const key = dateKey(current.date);
+            if (log.m[key]) delete log.m[key];
+            else log.m[key] = current.seed.w;
+            saveLog(log);
+            updateCheckin(log, key);
+            const streak = computeStreak(log);
+            el.streakText.textContent = streak + ' 天';
+            if (streak > 0) {
+                el.streakPill.style.animation = 'none';
+                void el.streakPill.offsetWidth;
+                el.streakPill.style.animation = 'rise 0.4s ease';
+            }
+        }
+
+        function goDay(offset) {
+            viewOffset = Math.max(-4000, Math.min(offset, 4000));
+            renderAll();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        el.checkinBtn.addEventListener('click', toggleCheckin);
+        el.prevDay.addEventListener('click', () => goDay(viewOffset - 1));
+        el.nextDay.addEventListener('click', () => goDay(viewOffset + 1));
+        el.todayBtn.addEventListener('click', () => goDay(0));
+        el.phoneticBtn.addEventListener('click', () => {
+            speak(current.seed.w);
+            flashCard();
+        });
+        el.exSay.addEventListener('click', () => speak(current.seed.e[0]));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowLeft') goDay(viewOffset - 1);
+            else if (e.key === 'ArrowRight') goDay(viewOffset + 1);
+            else if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                speak(current.seed.w);
+                flashCard();
+            }
+        });
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => { if (current) layoutMindMap(); }, 150);
+        });
+
+        // ================================================
+        // 启动
+        // ================================================
+        renderAll();
+    </script>
+</body>
+</html>
