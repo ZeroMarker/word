@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d36">
+  <title>Dewey Quest · Library Practice</title>
+  <style>
+    :root{--ink:#183d36;--muted:#61716b;--paper:#f7f5ed;--line:#d9dfd3;--green:#22604e;--gold:#edb755}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}a{color:var(--green)}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #be7d14;outline-offset:4px}button:disabled{cursor:default}header{border-bottom:1px solid var(--line)}.wrap{max-width:1120px;margin:auto;padding:24px}nav{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font-weight:800;letter-spacing:-.04em;font-size:22px}.brand span{background:var(--ink);color:var(--paper);padding:5px 9px;border-radius:6px;margin-right:8px}nav a{font-size:14px;text-decoration:none}.intro{margin:32px 0 24px;display:flex;justify-content:space-between;align-items:end;gap:24px}.eyebrow{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:var(--green)}h1{font-family:Georgia,serif;font-size:clamp(36px,6vw,58px);font-weight:400;letter-spacing:-.04em;margin:10px 0}p{line-height:1.6}.intro p{margin:0;color:var(--muted);max-width:560px}.tag{white-space:nowrap;font-size:12px;border:1px solid var(--line);border-radius:30px;padding:9px 14px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:26px;align-items:start}.panel{border:1px solid var(--line);border-radius:18px;background:#fffdf7;padding:28px}.hud{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}.hud strong{color:var(--ink)}.track{height:5px;background:#e5e9df;border-radius:5px;margin:14px 0 26px;overflow:hidden}.track div{height:100%;background:var(--green);width:0;transition:width .2s}.book{display:flex;gap:22px;align-items:center;padding:24px;background:#eef1e7;border-radius:12px;margin-bottom:24px}.cover{flex:0 0 74px;height:100px;background:var(--ink);border-radius:3px 8px 8px 3px;box-shadow:inset 6px 0 #ffffff18,4px 4px 0 #173d3615;display:grid;place-content:center;color:var(--gold);font-family:Georgia,serif;font-size:30px}.book h2{font:400 25px/1.25 Georgia,serif;margin:7px 0 10px}.book p{margin:0;color:#4b6257;font-size:14px}.prompt{font-size:14px;font-weight:700;margin:0 0 14px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{display:flex;align-items:center;gap:12px;min-height:60px;text-align:left;background:white;border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--ink);font-size:13px}.choice b{font-size:18px;font-variant-numeric:tabular-nums;color:var(--green)}.choice:hover:enabled{border-color:var(--green);background:#f0f5ed}.choice.correct{border-color:#267956;background:#e4f3e7}.choice.wrong{border-color:#b64b38;background:#fbeae3}.feedback{margin-top:20px;padding:16px;border-radius:10px;background:#edf3e9}.feedback.bad{background:#fbeee5}.feedback p{font-size:14px;margin:6px 0 0}.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px}.primary{background:var(--ink);color:white;border:0;border-radius:8px;padding:13px 20px;font-weight:700}.secondary{border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);padding:11px 16px}.primary:hover{background:var(--green)}.helper{font-size:12px;color:var(--muted)}details{border:1px solid var(--line);border-radius:14px;background:#eeefe5;padding:20px}summary{font-weight:750;cursor:pointer;font-size:15px}.reference{margin:20px 0 0;padding:0;list-style:none}.reference li{display:flex;gap:12px;border-top:1px solid #d8dece;padding:12px 0;font-size:12px;line-height:1.4}.reference b{font-size:15px;color:var(--green);white-space:nowrap;flex-shrink:0}.aside-note{font-size:12px;color:var(--muted);margin:18px 8px}.result{text-align:center;padding:20px 0}.result h2{font:400 34px Georgia,serif;margin:14px 0}.result-score{font:400 72px Georgia,serif;color:var(--green)}.review{padding:0;list-style:none;text-align:left}.review li{padding:14px 0;border-top:1px solid var(--line);font-size:14px}.review span{display:block;color:var(--muted);margin-top:5px}.result .actions{justify-content:center}footer{margin:26px 0 8px;font-size:12px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:820px){.layout{grid-template-columns:1fr}.intro{align-items:start}.tag{display:none}.wrap{padding:18px}.panel{padding:20px}.intro{margin-top:22px}}@media(max-width:440px){.choices{grid-template-columns:1fr}.book{padding:18px;gap:15px}.cover{flex-basis:52px;height:78px}.book h2{font-size:22px}.hud{font-size:12px}nav a{font-size:12px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <header><nav class="wrap"><div class="brand"><span>D.</span> Dewey Quest</div><a href="../index.html">← Word cards</a></nav></header>
+  <main class="wrap">
+    <section class="intro"><div><div class="eyebrow">The library learning club</div><h1>Every book has a place.</h1><p>Become the librarian. Read each book’s description and find its home in the Dewey Decimal Classification.</p></div><span class="tag">10 classes · 10 books · Your pace</span></section>
+    <div class="layout">
+      <section class="panel" aria-label="Classification game">
+        <div class="hud"><span id="round">Book 1 of 10</span><span>Score <strong id="score">0</strong></span><span>Best <strong id="best">0 / 10</strong></span></div>
+        <div class="track" role="progressbar" aria-label="Books answered" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="progress"><div id="fill"></div></div>
+        <div id="play">
+          <article class="book"><div class="cover" aria-hidden="true">D.</div><div><div class="eyebrow">A book to shelve</div><h2 id="title" tabindex="-1"></h2><p id="description"></p></div></article>
+          <p class="prompt">Which main class does this book belong to?</p>
+          <div class="choices" id="choices"></div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+          <div class="actions"><span class="helper">Choose a class. Use the field guide if you need help.</span><button class="primary" id="next" hidden>Next book →</button></div>
+        </div>
+        <section id="result" class="result" hidden aria-labelledby="resultTitle"><div class="eyebrow">Shift complete</div><h2 id="resultTitle" tabindex="-1">Your library report</h2><div class="result-score" id="finalScore"></div><p id="resultText"></p><ul class="review" id="review"></ul><div class="actions"><button class="primary" id="again">Play again</button><button class="secondary" id="retry" hidden>Practice missed books</button></div></section>
+      </section>
+      <aside><details open><summary>The Dewey field guide</summary><p class="helper">The first digit identifies the main class. Each class covers a range of 100 numbers.</p><ul class="reference" id="reference"></ul></details><p class="aside-note">Classify by the book’s focus, not just a word in its title. These fictional books practice the ten broad classes.</p></aside>
+    </div>
+    <footer>Class names and structure: <a href="https://www.oclc.org/content/dam/oclc/dewey/versions/print/intro.pdf" target="_blank" rel="noopener noreferrer">OCLC’s introduction to DDC</a>. This is an independent practice game.</footer>
+  </main>
+  <script>
+    const classes = [
+      ['000','Computer science, information & general works','Encyclopedias, libraries, and computing.'],
+      ['100','Philosophy & psychology','Ideas, ethics, and the mind.'],
+      ['200','Religion','Religious beliefs and practices.'],
+      ['300','Social sciences','Society, law, economics, and education.'],
+      ['400','Language','Grammar, linguistics, and language learning.'],
+      ['500','Science','Nature, mathematics, and scientific discovery.'],
+      ['600','Technology','Applied sciences, medicine, and engineering.'],
+      ['700','Arts & recreation','Art, music, sports, and games.'],
+      ['800','Literature','Poetry, plays, and literary works.'],
+      ['900','History & geography','Past events, places, and travel.']
+    ];
+    const books = [
+      ['Your First Computer Program','A beginner’s introduction to algorithms and writing computer code.',0],
+      ['The Big Book of Everything','A general encyclopedia with entries across many fields of knowledge.',0],
+      ['Inside the Library','An introduction to library science and organizing information.',0],
+      ['How Memory Works','A psychologist explains how people remember and forget.',1],
+      ['Thinking About Right and Wrong','An introduction to philosophical ethics and moral reasoning.',1],
+      ['Questions for Philosophers','A guide to philosophical ideas about knowledge and existence.',1],
+      ['Religions Around the World','An introduction to the beliefs and practices of world religions.',2],
+      ['Understanding Buddhism','A guide to Buddhist teachings and religious traditions.',2],
+      ['Sacred Traditions','A study of worship and rituals in different religions.',2],
+      ['How Economies Work','An introduction to markets, money, and economic systems.',3],
+      ['Learning in the Classroom','A guide to educational methods and how schools teach.',3],
+      ['A Citizen’s Guide to Law','An introduction to laws, legal rights, and courts.',3],
+      ['English Grammar Made Clear','A practical guide to English grammar and sentence structure.',4],
+      ['Your First Words in Spanish','A language-learning guide to Spanish vocabulary and conversation.',4],
+      ['The Science of Language','An introduction to linguistics and how languages are structured.',4],
+      ['Stars and Galaxies','An introduction to astronomy and the natural universe.',5],
+      ['Exploring Mathematics','A guide to mathematical ideas, numbers, and geometry.',5],
+      ['The Lives of Plants','A scientific introduction to botany and plant biology.',5],
+      ['Building Strong Bridges','An engineering guide to designing and constructing bridges.',6],
+      ['A Guide to Medical Care','An introduction to medicine, diagnosis, and treatment.',6],
+      ['Growing Crops','A practical guide to agriculture and farming techniques.',6],
+      ['Learn to Paint','A guide to painting techniques, color, and composition.',7],
+      ['Playing the Piano','A beginner’s guide to piano performance and musical practice.',7],
+      ['The Soccer Handbook','A guide to soccer skills, rules, and training.',7],
+      ['A Collection of English Poems','An anthology of literary poetry written in English.',8],
+      ['Plays for the Stage','A collection of dramatic literary texts to read and perform.',8],
+      ['Reading Great Literature','A study of literary works and how authors tell stories.',8],
+      ['Ancient Egypt: A History','An account of the people and events of ancient Egyptian civilization.',9],
+      ['An Atlas of the World','A collection of maps showing countries and geographical features.',9],
+      ['A Traveler’s Guide to Italy','A geographical travel guide to Italian regions and places to visit.',9]
+    ];
+    const $ = id => document.getElementById(id);
+    const shuffle = items => { const result = [...items]; for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];} return result; };
+    let deck=[], position=0, score=0, missed=[], answered=false, practice=false, best=0;
+    try { best=Math.min(10,Math.max(0,Number(localStorage.getItem('dewey-best'))||0)); } catch {}
+    $('best').textContent=`${best} / 10`;
+    classes.forEach(([code,name],index)=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=`${code}–${index}99`;const span=document.createElement('span');span.textContent=name;li.append(b,span);$('reference').append(li);});
+    function start(retry=false){
+      deck=retry?shuffle(missed):shuffle(classes.map((_,i)=>{const options=books.filter(book=>book[2]===i);return options[Math.floor(Math.random()*options.length)];}));
+      practice=retry;position=0;score=0;missed=[];
+      $('play').hidden=false;$('result').hidden=true;
+      $('progress').setAttribute('aria-valuemax',deck.length);render();
+    }
+    function render(){
+      answered=false;$('round').textContent=`${practice?'Practice · ':''}Book ${position+1} of ${deck.length}`;$('score').textContent=score;
+      $('fill').style.width=`${position/deck.length*100}%`;$('progress').setAttribute('aria-valuenow',position);
+      $('title').textContent=deck[position][0];$('description').textContent=deck[position][1];$('feedback').hidden=true;$('feedback').replaceChildren();$('next').hidden=true;$('choices').replaceChildren();
+      classes.forEach(([code,name],index)=>{const button=document.createElement('button');button.type='button';button.className='choice';const b=document.createElement('b');b.textContent=code;const span=document.createElement('span');span.textContent=name;button.append(b,span);button.addEventListener('click',()=>answer(index));$('choices').append(button);});
+    }
+    function answer(selected){
+      if(answered)return;answered=true;const correct=deck[position][2],ok=selected===correct;
+      if(ok)score++;else missed.push(deck[position]);
+      [...$('choices').children].forEach((button,index)=>{button.disabled=true;if(index===correct)button.classList.add('correct');else if(index===selected)button.classList.add('wrong');});
+      const heading=document.createElement('strong');heading.textContent=ok?'Correct — well shelved!':'Not quite — here’s its home.';
+      const explanation=document.createElement('p');explanation.textContent=`${classes[correct][0]} · ${classes[correct][1]}. ${classes[correct][2]}`;
+      $('feedback').className=`feedback${ok?'':' bad'}`;$('feedback').append(heading,explanation);$('feedback').hidden=false;
+      $('score').textContent=score;$('fill').style.width=`${(position+1)/deck.length*100}%`;$('progress').setAttribute('aria-valuenow',position+1);
+      $('next').textContent=position===deck.length-1?'See results →':'Next book →';$('next').hidden=false;$('next').focus();
+    }
+    function finish(){
+      $('play').hidden=true;$('result').hidden=false;$('round').textContent=practice?'Practice complete':'Round complete';
+      $('finalScore').textContent=`${score} / ${deck.length}`;$('resultText').textContent=missed.length?'Keep exploring! Review these books, then try them again.':'Perfect shelving! Every book found its home.';
+      if(!practice&&score>best){best=score;try{localStorage.setItem('dewey-best',String(best));}catch{}$('best').textContent=`${best} / 10`;}
+      $('review').replaceChildren();missed.forEach(book=>{const li=document.createElement('li');const title=document.createElement('strong');title.textContent=book[0];const answer=document.createElement('span');answer.textContent=`${classes[book[2]][0]} · ${classes[book[2]][1]}`;li.append(title,answer);$('review').append(li);});
+      $('retry').hidden=missed.length===0;$('resultTitle').focus();
+    }
+    $('next').addEventListener('click',()=>{if(!answered)return;position++;if(position===deck.length)finish();else{render();$('title').focus();}});
+    $('again').addEventListener('click',()=>{start();$('title').focus();});$('retry').addEventListener('click',()=>{start(true);$('title').focus();});
+    start();
+  </script>
+</body>
+</html>
